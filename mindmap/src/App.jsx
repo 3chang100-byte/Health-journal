@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Plus, MoreVertical, Upload, Download, CheckCircle2, Sprout } from 'lucide-react';
+import { Plus, MoreVertical, Upload, Download, CheckCircle2, Sprout, Mic } from 'lucide-react';
 import Editor from './Editor.jsx';
 import { Dialog, Menu } from './Panels.jsx';
 import { Park, PlantView, TemplatePicker } from './Park.jsx';
+import ImportDialog from './ImportDialog.jsx';
 import { CATEGORIES, categoryOf, josa, download, exportPayload, fromTemplate, loadMaps, makeMap, parseImport, reId, saveMaps, stats, titleOf } from './store.js';
 
 const routeId = () => (location.hash.match(/^#m-(.+)$/) || [])[1] || null;
@@ -18,6 +19,7 @@ export default function App() {
   const [tab, setTab] = useState(() => (location.hash === '#list' ? 'list' : 'garden'));
   const [picker, setPicker] = useState(null); // 'new' | 바꿀 마인드맵 id
   const [plantId, setPlantId] = useState(null);
+  const [importing, setImporting] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const [menuFor, setMenuFor] = useState(null);
   const [dialog, setDialog] = useState(null);
@@ -67,6 +69,14 @@ export default function App() {
 
   const create = (category) => {
     const m = fromTemplate(category);
+    setMaps((ms) => [m, ...ms]);
+    open(m.id);
+  };
+
+  // 녹음에서 만든 가지로 새 마인드맵을 심는다
+  const createFromTree = (root, category) => {
+    const m = { ...makeMap(), category, root };
+    setImporting(false);
     setMaps((ms) => [m, ...ms]);
     open(m.id);
   };
@@ -176,6 +186,7 @@ export default function App() {
         </div>
         <div className="home-actions">
           <button className="solid-btn plant-new" onClick={() => setPicker('new')}><Sprout size={17} /> 새로 심기</button>
+          <button className="ghost-btn" onClick={() => setImporting(true)}><Mic size={16} /> 녹음으로 심기</button>
           <button className="ghost-btn" onClick={() => fileRef.current.click()}><Upload size={16} /> 가져오기</button>
           <button
             className="ghost-btn"
@@ -194,6 +205,7 @@ export default function App() {
       </div>
 
       {tab === 'garden' && <Park maps={maps} onPick={open} onNew={() => setPicker('new')} />}
+      {importing && <ImportDialog onCreate={createFromTree} onClose={() => setImporting(false)} />}
       {picker === 'new' && (
         <TemplatePicker
           title="새 마인드맵"

@@ -364,6 +364,26 @@ h1, h2, h3, p { margin: 0; }
 .check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
 .send-status { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--done) 14%, var(--surface)); font-size: 13px; line-height: 1.5; }
 .send-status.warn { background: color-mix(in srgb, var(--doing) 16%, var(--surface)); }
+.segmented.three { grid-template-columns: repeat(3, 1fr); }
+.dialog.import { width: min(520px, 100%); max-height: 100%; overflow-y: auto; }
+.dialog.import header { display: flex; align-items: center; gap: 8px; }
+.dialog.import header h2 { flex: 1; }
+.dialog.import textarea { font: inherit; font-size: 15px; line-height: 1.5; }
+.rec-list { display: grid; gap: 6px; max-height: 240px; overflow-y: auto; }
+.rec { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+.rec.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.rec input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; margin: 0; }
+.rec span { min-width: 0; display: grid; gap: 1px; }
+.rec b { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.rec small { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.import-opts { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
+.import-opts select { flex: 1; min-width: 0; font: inherit; font-size: 15px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
+.dialog.import .check { margin-top: 0; align-items: flex-start; }
+.dialog.import .check span { display: block; color: var(--ink); line-height: 1.45; }
+.dialog.import .check small { display: block; color: var(--muted); font-size: 12px; }
+.dialog.import .check svg { vertical-align: -2px; color: var(--accent); }
+.dialog.import .send-status, .dialog.import .fine { margin: 0; color: var(--ink); }
+.dialog.import .fine { color: var(--muted); }
 .copy-text { display: block; width: 100%; min-height: 200px; resize: vertical; font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
 .copy-btn { width: 100%; height: 46px; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
 .del-choice {
