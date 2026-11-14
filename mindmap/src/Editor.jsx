@@ -16,7 +16,7 @@ const MAX_K = 2.5;
 export const StatusIcon = ({ status, size = 18 }) =>
   status === 'done' ? <CheckCircle2 size={size} /> : status === 'doing' ? <CircleDot size={size} /> : <Circle size={size} />;
 
-export default function Editor({ map, onChange, onBack, onExport, onToggleDone, onPickCategory }) {
+export default function Editor({ map, onChange, onBack, onExport, onToggleDone, onPickCategory, onShowPlant }) {
   const [selectedId, setSelectedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
@@ -557,7 +557,7 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
   return (
     <div className="editor">
       <header className="topbar">
-        <button className="icon-btn" onClick={onBack} aria-label="목록으로"><ArrowLeft size={20} /></button>
+        <button className="icon-btn" onClick={onBack} aria-label="정원으로"><ArrowLeft size={20} /></button>
         <h1 className="map-title">{titleOf(map)}</h1>
         {total.total > 0 && (
           <button className="progress-pill" onClick={() => setSheet(sheet === 'tasks' ? null : 'tasks')} title="할 일 목록">
@@ -577,7 +577,8 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
               { label: '모두 펼치기', run: () => setAllCollapsed(false) },
               { label: '모두 접기', run: () => setAllCollapsed(true) },
               { label: '화면에 맞추기', run: () => fit() },
-              { label: map.completedAt ? '완료 취소' : '프로젝트 완료 (공원에 심기)', run: onToggleDone },
+              { label: `${CATEGORIES[categoryOf(map)].plantName}로 보기`, run: onShowPlant },
+              { label: map.completedAt ? '완료 취소' : '프로젝트 완료', run: onToggleDone },
               { label: `주제 바꾸기 (지금: ${CATEGORIES[categoryOf(map)].label})`, run: onPickCategory },
               { label: '이 마인드맵 내보내기 (JSON)', run: onExport },
             ]}
@@ -681,10 +682,10 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
         {!selected && !sheet && (
           !map.completedAt && total.total > 0 && total.done === total.total ? (
             <button className="hint plant-cta" onClick={onToggleDone}>
-              할 일을 모두 끝냈어요 · 프로젝트를 완료하고 공원에 심기
+              할 일을 모두 끝냈어요 · 프로젝트 완료하기
             </button>
           ) : (
-            <div className="hint">{map.completedAt ? '완료한 프로젝트 · 공원에서 자란 모습을 볼 수 있어요' : '가지를 눌러 선택 · 두 번 눌러 이름 수정 · 길게 눌러 옮기기'}</div>
+            <div className="hint">{map.completedAt ? '완료한 프로젝트 · 정원에서 다 자란 모습을 볼 수 있어요' : '가지를 눌러 선택 · 두 번 눌러 이름 수정 · 길게 눌러 옮기기'}</div>
           )
         )}
 

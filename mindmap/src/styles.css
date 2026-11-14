@@ -14,7 +14,7 @@
   --shadow: 0 6px 24px rgba(20, 22, 30, 0.12);
   --font: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
   --on-danger: #ffffff;
-  --bark: #7b5b3e; --leaf: #3f9b4f; --leaf-2: #7cc46a; --leaf-pale: #b7dba6; --leaf-vein: rgba(20, 60, 25, 0.35);
+  --bark: #7b5b3e; --leaf: #3f9b4f; --leaf-2: #7cc46a; --leaf-pale: #b7dba6; --g-skin: #f0c9a0; --g-hat: #e0b04a; --g-pants: #4a5568; --g-tool: #8a94a3; --g-water: #4aa3df; --leaf-vein: rgba(20, 60, 25, 0.35);
   --fruit: #e03131; --bud: #c9c6ba; --pollen: #f2b632; --ground: #dbe7c6; --ground-2: #c7dbab;
   --st: env(safe-area-inset-top, 0px);
   --sb: env(safe-area-inset-bottom, 0px);
@@ -25,7 +25,7 @@
     --bg: #15171a; --surface: #212429; --surface-2: #2a2e34; --ink: #e9e9e6; --muted: #9aa1ab;
     --line: #363b43; --dot: #2b2f35; --accent: #8da2fb; --accent-ink: #11131a;
     --done: #51cf66; --doing: #ff922b; --danger: #f783ac; --on-danger: #1a1012;
-    --bark: #b18d6a; --leaf: #4fb262; --leaf-2: #86cf78; --leaf-pale: #41603d; --leaf-vein: rgba(10, 30, 12, 0.45);
+    --bark: #b18d6a; --leaf: #4fb262; --leaf-2: #86cf78; --leaf-pale: #41603d; --g-skin: #e8bf96; --g-hat: #d9aa4a; --g-pants: #aab3c2; --g-tool: #9aa5b5; --g-water: #6fbdf0; --leaf-vein: rgba(10, 30, 12, 0.45);
     --fruit: #ff6b6b; --bud: #5a5f57; --pollen: #f5c451; --ground: #26321f; --ground-2: #1e2919;
     --shadow: 0 6px 24px rgba(0, 0, 0, 0.45); color-scheme: dark;
   }
@@ -34,7 +34,7 @@
     --bg: #15171a; --surface: #212429; --surface-2: #2a2e34; --ink: #e9e9e6; --muted: #9aa1ab;
     --line: #363b43; --dot: #2b2f35; --accent: #8da2fb; --accent-ink: #11131a;
     --done: #51cf66; --doing: #ff922b; --danger: #f783ac; --on-danger: #1a1012;
-    --bark: #b18d6a; --leaf: #4fb262; --leaf-2: #86cf78; --leaf-pale: #41603d; --leaf-vein: rgba(10, 30, 12, 0.45);
+    --bark: #b18d6a; --leaf: #4fb262; --leaf-2: #86cf78; --leaf-pale: #41603d; --g-skin: #e8bf96; --g-hat: #d9aa4a; --g-pants: #aab3c2; --g-tool: #9aa5b5; --g-water: #6fbdf0; --leaf-vein: rgba(10, 30, 12, 0.45);
     --fruit: #ff6b6b; --bud: #5a5f57; --pollen: #f5c451; --ground: #26321f; --ground-2: #1e2919;
     --shadow: 0 6px 24px rgba(0, 0, 0, 0.45); color-scheme: dark;
 }
@@ -131,6 +131,32 @@ h1, h2, h3, p { margin: 0; }
 .plant-name { font-size: 9.5px; fill: var(--ink); font-weight: 600; }
 .plant:hover .plant-name, .plant:focus-visible .plant-name { fill: var(--accent); text-decoration: underline; }
 .plant:focus-visible rect { stroke: var(--accent); stroke-width: 1.5; rx: 8; }
+.plant-pct { font-size: 8px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.plant-new { display: inline-flex; align-items: center; gap: 6px; background: var(--leaf); color: var(--surface); }
+/* 정원사 애니메이션 */
+.g-walk { animation: g-stroll var(--dur) linear var(--delay) infinite; }
+.g-face { animation: g-turn var(--dur) linear var(--delay) infinite; }
+.g-leg { stroke: var(--g-pants); stroke-width: 2.2; stroke-linecap: round; transform-box: fill-box; transform-origin: 50% 0; animation: g-step 0.7s ease-in-out infinite alternate; }
+.g-leg.b { animation-direction: alternate-reverse; }
+.g-body { animation: g-bob 0.7s ease-in-out infinite alternate; }
+.g-arm { stroke: var(--g-skin); stroke-width: 1.8; stroke-linecap: round; }
+.g-can { transform-box: fill-box; transform-origin: 0 50%; animation: g-pour 2.4s ease-in-out infinite alternate; }
+.g-drop { fill: var(--g-water); animation: g-drip 0.9s linear infinite; }
+.g-rake { transform-box: fill-box; transform-origin: 20% 0; animation: g-rake 1.1s ease-in-out infinite alternate; }
+.g-wheel { transform-box: fill-box; transform-origin: center; animation: g-spin 1.2s linear infinite; }
+@keyframes g-stroll { 0% { transform: translateX(var(--a)); } 48% { transform: translateX(var(--b)); } 50% { transform: translateX(var(--b)); } 98% { transform: translateX(var(--a)); } 100% { transform: translateX(var(--a)); } }
+@keyframes g-turn { 0%, 48.9% { transform: scaleX(1); } 49%, 98.9% { transform: scaleX(-1); } 99%, 100% { transform: scaleX(1); } }
+@keyframes g-step { from { transform: rotate(-24deg); } to { transform: rotate(24deg); } }
+@keyframes g-bob { from { transform: translateY(0); } to { transform: translateY(-0.7px); } }
+@keyframes g-pour { from { transform: rotate(4deg); } to { transform: rotate(-14deg); } }
+@keyframes g-drip { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(2px, 14px); opacity: 0; } }
+@keyframes g-rake { from { transform: rotate(-9deg); } to { transform: rotate(10deg); } }
+@keyframes g-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .g-walk, .g-face, .g-leg, .g-body, .g-can, .g-drop, .g-rake, .g-wheel { animation: none; }
+  .g-walk { transform: translateX(120px); }
+  .g-drop { opacity: 0.8; }
+}
 .plant-label { font-size: 5.2px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 1.6px; stroke-linejoin: round; }
 .plant-label.strong { font-size: 6px; font-weight: 700; }
 .plant-view { width: min(720px, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }

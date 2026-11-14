@@ -190,9 +190,17 @@ export function plantGeo(map, detail = false) {
   return treeGeo(map, { detail, fruit: kind === 'fruit' });
 }
 
-/** 공원에서의 크기: 완료하면 다 자란 크기, 아니면 끝낸 할 일만큼 자란다 */
+/** 정원에서의 크기(0.3~1): 시작하면 묘목으로 심기고, 진행한 만큼 자란다 */
 export function growth(map) {
   if (map.completedAt) return 1;
   const s = stats(map.root);
-  return 0.55 + (s.total ? (s.done / s.total) * 0.33 : 0.05);
+  // 할 일이 있으면 끝낸 비율만큼, 없으면 가지를 채운 만큼 자란다
+  const progress = s.total ? s.done / s.total : Math.min(0.6, (s.nodes - 1) * 0.04);
+  return 0.3 + progress * 0.62;
 }
+
+export const progressOf = (map) => {
+  if (map.completedAt) return 1;
+  const s = stats(map.root);
+  return s.total ? s.done / s.total : 0;
+};

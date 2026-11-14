@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Plus, MoreVertical, Upload, Download, CheckCircle2 } from 'lucide-react';
+import { Plus, MoreVertical, Upload, Download, CheckCircle2, Sprout } from 'lucide-react';
 import Editor from './Editor.jsx';
 import { Dialog, Menu } from './Panels.jsx';
 import { Park, PlantView, TemplatePicker } from './Park.jsx';
-import { CATEGORIES, categoryOf, download, exportPayload, fromTemplate, loadMaps, makeMap, parseImport, reId, saveMaps, stats, titleOf } from './store.js';
+import { CATEGORIES, categoryOf, josa, download, exportPayload, fromTemplate, loadMaps, makeMap, parseImport, reId, saveMaps, stats, titleOf } from './store.js';
 
 const routeId = () => (location.hash.match(/^#m-(.+)$/) || [])[1] || null;
 
@@ -15,7 +15,7 @@ const fmtDate = (t) => {
 export default function App() {
   const [maps, setMaps] = useState(loadMaps);
   const [openId, setOpenId] = useState(routeId);
-  const [tab, setTab] = useState(() => (location.hash === '#park' ? 'park' : 'list'));
+  const [tab, setTab] = useState(() => (location.hash === '#list' ? 'list' : 'garden'));
   const [picker, setPicker] = useState(null); // 'new' | 바꿀 마인드맵 id
   const [plantId, setPlantId] = useState(null);
   const [saveFailed, setSaveFailed] = useState(false);
@@ -28,7 +28,7 @@ export default function App() {
   useEffect(() => {
     const onHash = () => {
       setOpenId(routeId());
-      setTab(location.hash === '#park' ? 'park' : 'list');
+      setTab(location.hash === '#list' ? 'list' : 'garden');
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
@@ -79,16 +79,16 @@ export default function App() {
       return next;
     }));
 
-  // 완료하면 공원에 다 자란 모습으로 남는다
+  // 완료하면 정원에서 다 자란 모습이 된다
   const toggleDone = (m, celebrate = true) => {
     patchMap(m.id, { completedAt: m.completedAt ? 0 : Date.now() });
     if (!m.completedAt && celebrate) {
       const info = CATEGORIES[categoryOf(m)];
       setDialog({
         title: '프로젝트 완료',
-        message: `‘${titleOf(m)}’이(가) 공원의 ‘${info.zone}’ 구역에 ${info.plantName}(으)로 자랐어요.`,
-        confirmLabel: '공원 보기',
-        onConfirm: () => { location.hash = '#park'; },
+        message: `‘${titleOf(m)}’ 프로젝트가 정원의 ‘${info.zone}’ 구역에서 다 자란 ${josa(info.plantName, '이', '가')} 됐어요.`,
+        confirmLabel: '정원 보기',
+        onConfirm: () => { location.hash = ''; },
       });
     }
   };
@@ -141,11 +141,21 @@ export default function App() {
           onExport={() => exportMaps(`${titleOf(current)}.json`, [mapsRef.current.find((m) => m.id === current.id)])}
           onToggleDone={() => toggleDone(mapsRef.current.find((m) => m.id === current.id))}
           onPickCategory={() => setPicker(current.id)}
+          onShowPlant={() => setPlantId(current.id)}
         />
+        {plantId === current.id && (
+          <PlantView
+            map={current}
+            onOpen={() => setPlantId(null)}
+            openLabel="마인드맵으로 돌아가기"
+            onToggleDone={() => toggleDone(mapsRef.current.find((m) => m.id === current.id), false)}
+            onClose={() => setPlantId(null)}
+          />
+        )}
         {picker && (
           <TemplatePicker
             title="주제 바꾸기"
-            note="주제에 따라 공원에서 자라는 구역과 식물이 달라집니다. 마인드맵 내용은 그대로예요."
+            note="주제에 따라 정원에서 자라는 구역과 식물이 달라집니다. 마인드맵 내용은 그대로예요."
             onPick={(c) => patchMap(current.id, { category: c })}
             onClose={() => setPicker(null)}
           />
@@ -162,9 +172,10 @@ export default function App() {
       <header className="home-head">
         <div>
           <h1>생각의 정원</h1>
-          <p>프로젝트를 가지로 펼치고, 끝낸 프로젝트로 공원을 가꿔요.</p>
+          <p>마인드맵을 시작하면 정원에 심기고, 일을 해낼수록 자라요.</p>
         </div>
         <div className="home-actions">
+          <button className="solid-btn plant-new" onClick={() => setPicker('new')}><Sprout size={17} /> 새로 심기</button>
           <button className="ghost-btn" onClick={() => fileRef.current.click()}><Upload size={16} /> 가져오기</button>
           <button
             className="ghost-btn"
@@ -178,19 +189,11 @@ export default function App() {
       </header>
 
       <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => { location.hash = ''; }}>프로젝트 {maps.length}</button>
-        <button role="tab" aria-selected={tab === 'park'} className={tab === 'park' ? 'on' : ''} onClick={() => { location.hash = '#park'; }}>공원 {maps.filter((m) => m.completedAt).length}</button>
+        <button role="tab" aria-selected={tab === 'garden'} className={tab === 'garden' ? 'on' : ''} onClick={() => { location.hash = ''; }}>정원</button>
+        <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => { location.hash = '#list'; }}>목록 {maps.length}</button>
       </div>
 
-      {tab === 'park' && <Park maps={maps} onPick={setPlantId} />}
-      {plantId && maps.some((m) => m.id === plantId) && (
-        <PlantView
-          map={maps.find((m) => m.id === plantId)}
-          onOpen={() => { const id = plantId; setPlantId(null); open(id); }}
-          onToggleDone={() => toggleDone(maps.find((m) => m.id === plantId), false)}
-          onClose={() => setPlantId(null)}
-        />
-      )}
+      {tab === 'garden' && <Park maps={maps} onPick={open} onNew={() => setPicker('new')} />}
       {picker === 'new' && (
         <TemplatePicker
           title="새 마인드맵"
@@ -228,7 +231,7 @@ export default function App() {
                 <Menu
                   onClose={() => setMenuFor(null)}
                   items={[
-                    { label: m.completedAt ? '완료 취소' : '프로젝트 완료 (공원에 심기)', run: () => toggleDone(m) },
+                    { label: m.completedAt ? '완료 취소' : '프로젝트 완료', run: () => toggleDone(m) },
                     { label: '복제', run: () => duplicate(m) },
                     { label: '내보내기 (JSON)', run: () => exportMaps(`${titleOf(m)}.json`, [m]) },
                     { label: '삭제', danger: true, run: () => remove(m) },

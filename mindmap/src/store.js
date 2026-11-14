@@ -18,12 +18,17 @@ export const makeMap = (title = '새 프로젝트') => ({
   root: makeNode(title),
 });
 
-// 프로젝트 주제 = 공원 구역 = 식물 종류
+// 프로젝트 주제 = 정원 구역 = 식물 종류
 export const CATEGORIES = {
-  app: { label: '앱 만들기', zone: '앱 만들기', plant: 'tree', plantName: '나무', desc: '아이디어를 정리해 Claude에 붙여 넣으면 앱 제작을 시작할 수 있어요. 완료하면 나무가 돼요.' },
-  business: { label: '사업 확장', zone: '사업 확장', plant: 'fruit', plantName: '열매 나무', desc: '목표·고객·마케팅·실행 계획을 한 장에. 완료하면 열매 나무가 돼요.' },
-  personal: { label: '개인 프로젝트', zone: '개인 정원', plant: 'flower', plantName: '꽃', desc: '하고 싶은 일을 목표와 첫 걸음으로. 완료하면 꽃이 피어요.' },
-  free: { label: '자유 프로젝트', zone: '기타', plant: 'bush', plantName: '덤불', desc: '빈 마인드맵에서 자유롭게 시작합니다. 완료하면 덤불이 돼요.' },
+  app: { label: '앱 만들기', zone: '앱 만들기', plant: 'tree', plantName: '나무', desc: '아이디어를 정리해 Claude에 붙여 넣으면 앱 제작을 시작할 수 있어요. 정원에 나무로 자라요.' },
+  business: { label: '사업 확장', zone: '사업 확장', plant: 'fruit', plantName: '열매 나무', desc: '목표·고객·마케팅·실행 계획을 한 장에. 정원에 열매 나무로 자라요.' },
+  personal: { label: '개인 프로젝트', zone: '개인 정원', plant: 'flower', plantName: '꽃', desc: '하고 싶은 일을 목표와 첫 걸음으로. 정원에 꽃으로 자라요.' },
+  free: { label: '자유 프로젝트', zone: '기타', plant: 'bush', plantName: '덤불', desc: '빈 마인드맵에서 자유롭게 시작합니다. 정원에 덤불로 자라요.' },
+};
+/** 받침 유무에 맞는 조사를 붙인다: josa('꽃', '을', '를') → '꽃을' */
+export const josa = (word, withFinal, without) => {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  return word + (code >= 0 && code <= 11171 && code % 28 !== 0 ? withFinal : without);
 };
 export const CATEGORY_KEYS = Object.keys(CATEGORIES);
 export const categoryOf = (map) => (CATEGORIES[map.category] ? map.category : 'free');
