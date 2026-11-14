@@ -579,7 +579,7 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
               { label: '화면에 맞추기', run: () => fit() },
               { label: `${CATEGORIES[categoryOf(map)].plantName}로 보기`, run: onShowPlant },
               { label: map.completedAt ? '완료 취소' : '프로젝트 완료', run: onToggleDone },
-              { label: `주제 바꾸기 (지금: ${CATEGORIES[categoryOf(map)].label})`, run: onPickCategory },
+              { label: `구역 바꾸기 (지금: ${CATEGORIES[categoryOf(map)].zone})`, run: onPickCategory },
               { label: '이 마인드맵 내보내기 (JSON)', run: onExport },
             ]}
           />
