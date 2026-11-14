@@ -179,6 +179,9 @@ function sampleMap() {
   const n = (text, extra, children = []) => ({ ...makeNode(text, extra), children });
   const map = makeMap('웹사이트 리뉴얼');
   map.category = 'business';
+  // 예시는 기기마다 따로 만들어지므로, 동기화할 때 하나로 합쳐지도록 같은 id와 가장 오래된 수정 시각을 준다
+  map.id = 'sample-website';
+  map.updatedAt = 1;
   map.root.children = [
     n('기획', {}, [
       n('목표 정리', { status: 'done' }),

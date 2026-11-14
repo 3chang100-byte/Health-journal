@@ -384,6 +384,17 @@ h1, h2, h3, p { margin: 0; }
 .dialog.import .check svg { vertical-align: -2px; color: var(--accent); }
 .dialog.import .send-status, .dialog.import .fine { margin: 0; color: var(--ink); }
 .dialog.import .fine { color: var(--muted); }
+.sync-btn.idle { color: var(--done); }
+.sync-btn.error { color: var(--danger); }
+.sync-form { display: grid; gap: 10px; }
+.sync-form ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 13.5px; line-height: 1.55; color: var(--ink); }
+.sync-form a { color: var(--accent); font-weight: 600; }
+.sync-form input { font: inherit; font-size: 16px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.sync-form .field-label { margin: 0; }
+.sync-state { display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--bg); font-size: 14px; }
+.sync-state span { color: var(--muted); }
+.dialog-actions .text-btn { margin-right: auto; }
+.dialog-actions .solid-btn { display: inline-flex; align-items: center; gap: 6px; }
 .copy-text { display: block; width: 100%; min-height: 200px; resize: vertical; font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
 .copy-btn { width: 100%; height: 46px; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
 .del-choice {
