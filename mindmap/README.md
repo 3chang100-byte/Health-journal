@@ -47,9 +47,11 @@ npm install
 npm run dev
 ```
 
-## 배포 (Vercel)
+## 배포
 
-저장소를 Vercel에 연결할 때 **Root Directory를 `mindmap`** 으로 지정하면 됩니다. (Framework: Vite, 나머지는 기본값)
+**GitHub Pages (자동)**: `main` 브랜치에 `mindmap/` 변경이 올라가면 `.github/workflows/deploy-mindmap.yml`이 빌드해서 배포합니다. 처음 한 번만 저장소 **Settings → Pages → Source**를 **GitHub Actions**로 바꿔 주세요. 주소는 `https://<사용자>.github.io/<저장소>/` 입니다.
+
+**Vercel**: 저장소를 연결할 때 **Root Directory를 `mindmap`** 으로 지정하면 됩니다. (Framework: Vite, 나머지는 기본값)
 
 ## 데이터
 
