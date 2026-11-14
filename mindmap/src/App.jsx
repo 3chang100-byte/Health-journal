@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Plus, MoreVertical, Upload, Download, CheckCircle2, Sprout, Mic } from 'lucide-react';
+import { Plus, MoreVertical, Upload, Download, CheckCircle2, Sprout, Mic, Cloud, CloudOff, AlertTriangle } from 'lucide-react';
 import Editor from './Editor.jsx';
 import { Dialog, Menu } from './Panels.jsx';
 import { Park, PlantView, TemplatePicker } from './Park.jsx';
 import ImportDialog from './ImportDialog.jsx';
+import SyncDialog from './SyncDialog.jsx';
+import { markDeleted, useSync } from './sync.js';
 import { CATEGORIES, categoryOf, josa, download, exportPayload, fromTemplate, loadMaps, makeMap, parseImport, reId, saveMaps, stats, titleOf } from './store.js';
 
 const routeId = () => (location.hash.match(/^#m-(.+)$/) || [])[1] || null;
@@ -20,6 +22,7 @@ export default function App() {
   const [picker, setPicker] = useState(null); // 'new' | 바꿀 마인드맵 id
   const [plantId, setPlantId] = useState(null);
   const [importing, setImporting] = useState(false);
+  const [syncOpen, setSyncOpen] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const [menuFor, setMenuFor] = useState(null);
   const [dialog, setDialog] = useState(null);
@@ -40,6 +43,16 @@ export default function App() {
     const t = setTimeout(() => setSaveFailed(!saveMaps(maps)), 250);
     return () => clearTimeout(t);
   }, [maps]);
+
+  // 기기 간 동기화: 고친 뒤 잠시 멈추면 올린다 (미리보기 페이지에서는 외부 연결이 막혀 있어 끈다)
+  const canSync = !window.MINDMAP_HOST?.noDownload;
+  const sync = useSync(mapsRef, setMaps);
+  const { connected, syncNow } = sync;
+  useEffect(() => {
+    if (!connected) return undefined;
+    const t = setTimeout(syncNow, 4000);
+    return () => clearTimeout(t);
+  }, [maps, connected, syncNow]);
 
   useEffect(() => {
     const flush = () => saveMaps(mapsRef.current);
@@ -118,7 +131,7 @@ export default function App() {
       message: `'${titleOf(m)}' 마인드맵을 삭제할까요? 되돌릴 수 없습니다.`,
       confirmLabel: '삭제',
       danger: true,
-      onConfirm: () => setMaps((ms) => ms.filter((x) => x.id !== m.id)),
+      onConfirm: () => { markDeleted(m.id); setMaps((ms) => ms.filter((x) => x.id !== m.id)); },
     });
   };
 
@@ -187,6 +200,12 @@ export default function App() {
         <div className="home-actions">
           <button className="solid-btn plant-new" onClick={() => setPicker('new')}><Sprout size={17} /> 새로 심기</button>
           <button className="ghost-btn" onClick={() => setImporting(true)}><Mic size={16} /> 녹음으로 심기</button>
+          {canSync && (
+            <button className={`ghost-btn sync-btn ${sync.status}`} onClick={() => setSyncOpen(true)}>
+              {sync.status === 'off' ? <CloudOff size={16} /> : sync.status === 'error' ? <AlertTriangle size={16} /> : <Cloud size={16} />}
+              {sync.status === 'off' ? '동기화 켜기' : sync.status === 'syncing' ? '동기화 중…' : sync.status === 'error' ? '동기화 확인 필요' : '동기화됨'}
+            </button>
+          )}
           <button className="ghost-btn" onClick={() => fileRef.current.click()}><Upload size={16} /> 가져오기</button>
           <button
             className="ghost-btn"
@@ -205,6 +224,7 @@ export default function App() {
       </div>
 
       {tab === 'garden' && <Park maps={maps} onPick={open} onNew={() => setPicker('new')} />}
+      {syncOpen && <SyncDialog sync={sync} onClose={() => setSyncOpen(false)} />}
       {importing && <ImportDialog onCreate={createFromTree} onClose={() => setImporting(false)} />}
       {picker === 'new' && (
         <TemplatePicker
