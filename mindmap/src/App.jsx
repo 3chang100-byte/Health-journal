@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Plus, MoreVertical, Upload, Download } from 'lucide-react';
+import { Plus, MoreVertical, Upload, Download, CheckCircle2 } from 'lucide-react';
 import Editor from './Editor.jsx';
 import { Dialog, Menu } from './Panels.jsx';
-import { download, exportPayload, loadMaps, makeMap, parseImport, reId, saveMaps, stats, titleOf } from './store.js';
+import { Park, PlantView, TemplatePicker } from './Park.jsx';
+import { CATEGORIES, categoryOf, download, exportPayload, fromTemplate, loadMaps, makeMap, parseImport, reId, saveMaps, stats, titleOf } from './store.js';
 
 const routeId = () => (location.hash.match(/^#m-(.+)$/) || [])[1] || null;
 
@@ -14,6 +15,9 @@ const fmtDate = (t) => {
 export default function App() {
   const [maps, setMaps] = useState(loadMaps);
   const [openId, setOpenId] = useState(routeId);
+  const [tab, setTab] = useState(() => (location.hash === '#park' ? 'park' : 'list'));
+  const [picker, setPicker] = useState(null); // 'new' | 바꿀 마인드맵 id
+  const [plantId, setPlantId] = useState(null);
   const [saveFailed, setSaveFailed] = useState(false);
   const [menuFor, setMenuFor] = useState(null);
   const [dialog, setDialog] = useState(null);
@@ -22,7 +26,10 @@ export default function App() {
   mapsRef.current = maps;
 
   useEffect(() => {
-    const onHash = () => setOpenId(routeId());
+    const onHash = () => {
+      setOpenId(routeId());
+      setTab(location.hash === '#park' ? 'park' : 'list');
+    };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
@@ -58,16 +65,40 @@ export default function App() {
   };
   const current = maps.find((m) => m.id === openId);
 
-  const create = () => {
-    const m = makeMap();
+  const create = (category) => {
+    const m = fromTemplate(category);
     setMaps((ms) => [m, ...ms]);
     open(m.id);
+  };
+
+  const patchMap = (id, patch) =>
+    setMaps((ms) => ms.map((m) => {
+      if (m.id !== id) return m;
+      const next = { ...m, ...patch, updatedAt: Date.now() };
+      if (!next.completedAt) delete next.completedAt;
+      return next;
+    }));
+
+  // 완료하면 공원에 다 자란 모습으로 남는다
+  const toggleDone = (m, celebrate = true) => {
+    patchMap(m.id, { completedAt: m.completedAt ? 0 : Date.now() });
+    if (!m.completedAt && celebrate) {
+      const info = CATEGORIES[categoryOf(m)];
+      setDialog({
+        title: '프로젝트 완료',
+        message: `‘${titleOf(m)}’이(가) 공원의 ‘${info.zone}’ 구역에 ${info.plantName}(으)로 자랐어요.`,
+        confirmLabel: '공원 보기',
+        onConfirm: () => { location.hash = '#park'; },
+      });
+    }
   };
 
   const duplicate = (m) => {
     const copy = { ...structuredClone(m), ...makeMap(), root: reId(structuredClone(m.root)) };
     copy.root.text = `${titleOf(m)} 사본`;
     copy.layout = m.layout;
+    copy.category = categoryOf(m);
+    delete copy.completedAt;
     setMaps((ms) => [copy, ...ms]);
   };
 
@@ -108,7 +139,17 @@ export default function App() {
           onChange={(next) => setMaps((ms) => ms.map((m) => (m.id === next.id ? next : m)))}
           onBack={() => { location.hash = ''; }}
           onExport={() => exportMaps(`${titleOf(current)}.json`, [mapsRef.current.find((m) => m.id === current.id)])}
+          onToggleDone={() => toggleDone(mapsRef.current.find((m) => m.id === current.id))}
+          onPickCategory={() => setPicker(current.id)}
         />
+        {picker && (
+          <TemplatePicker
+            title="주제 바꾸기"
+            note="주제에 따라 공원에서 자라는 구역과 식물이 달라집니다. 마인드맵 내용은 그대로예요."
+            onPick={(c) => patchMap(current.id, { category: c })}
+            onClose={() => setPicker(null)}
+          />
+        )}
         {dialog && <Dialog {...dialog} onClose={() => setDialog(null)} />}
       </>
     );
@@ -121,7 +162,7 @@ export default function App() {
       <header className="home-head">
         <div>
           <h1>마인드맵</h1>
-          <p>프로젝트를 가지로 펼치고, 할 일까지 한 장에서.</p>
+          <p>프로젝트를 가지로 펼치고, 끝낸 프로젝트로 공원을 가꿔요.</p>
         </div>
         <div className="home-actions">
           <button className="ghost-btn" onClick={() => fileRef.current.click()}><Upload size={16} /> 가져오기</button>
@@ -136,14 +177,42 @@ export default function App() {
         </div>
       </header>
 
+      <div className="tabs" role="tablist">
+        <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => { location.hash = ''; }}>프로젝트 {maps.length}</button>
+        <button role="tab" aria-selected={tab === 'park'} className={tab === 'park' ? 'on' : ''} onClick={() => { location.hash = '#park'; }}>공원 {maps.filter((m) => m.completedAt).length}</button>
+      </div>
+
+      {tab === 'park' && <Park maps={maps} onPick={setPlantId} />}
+      {plantId && maps.some((m) => m.id === plantId) && (
+        <PlantView
+          map={maps.find((m) => m.id === plantId)}
+          onOpen={() => { const id = plantId; setPlantId(null); open(id); }}
+          onToggleDone={() => toggleDone(maps.find((m) => m.id === plantId), false)}
+          onClose={() => setPlantId(null)}
+        />
+      )}
+      {picker === 'new' && (
+        <TemplatePicker
+          title="새 마인드맵"
+          note="프로젝트 주제를 고르면 그에 맞는 가지가 미리 채워집니다."
+          onPick={create}
+          onClose={() => setPicker(null)}
+        />
+      )}
+
+      {tab === 'list' && <>
       <div className="grid">
-        <button className="card new" onClick={create}><Plus size={22} /> 새 마인드맵</button>
+        <button className="card new" onClick={() => setPicker('new')}><Plus size={22} /> 새 마인드맵</button>
         {sorted.map((m) => {
           const s = stats(m.root);
           return (
             <div key={m.id} className="card">
               <button className="card-main" onClick={() => open(m.id)}>
                 <strong>{titleOf(m)}</strong>
+                <span className="card-tags">
+                  <span className="chip">{CATEGORIES[categoryOf(m)].label}</span>
+                  {m.completedAt && <span className="chip done"><CheckCircle2 size={12} /> 완료</span>}
+                </span>
                 <span className="card-sub">가지 {s.nodes - 1}개 · {fmtDate(m.updatedAt)}</span>
                 {s.total > 0 ? (
                   <span className="card-progress">
@@ -159,6 +228,7 @@ export default function App() {
                 <Menu
                   onClose={() => setMenuFor(null)}
                   items={[
+                    { label: m.completedAt ? '완료 취소' : '프로젝트 완료 (공원에 심기)', run: () => toggleDone(m) },
                     { label: '복제', run: () => duplicate(m) },
                     { label: '내보내기 (JSON)', run: () => exportMaps(`${titleOf(m)}.json`, [m]) },
                     { label: '삭제', danger: true, run: () => remove(m) },
@@ -169,8 +239,9 @@ export default function App() {
           );
         })}
       </div>
-      {dialog && <Dialog {...dialog} onClose={() => setDialog(null)} />}
       <p className="foot">모든 내용은 이 기기의 브라우저에만 저장됩니다. 기기를 바꾸거나 브라우저 데이터를 지우기 전에 <b>전체 백업</b>을 받아 두세요.</p>
+      </>}
+      {dialog && <Dialog {...dialog} onClose={() => setDialog(null)} />}
     </div>
   );
 }

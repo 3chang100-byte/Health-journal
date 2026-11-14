@@ -3,7 +3,7 @@ import {
   ArrowLeft, Undo2, Redo2, ListTodo, MoreVertical, Plus, Trash2, Pencil, Circle, CircleDot,
   CheckCircle2, ZoomIn, ZoomOut, Maximize, CornerDownRight, SlidersHorizontal, Send, CalendarPlus,
 } from 'lucide-react';
-import { STATUSES, STATUS_LABEL, find, makeNode, stats, titleOf, walk } from './store.js';
+import { CATEGORIES, STATUSES, STATUS_LABEL, categoryOf, find, makeNode, stats, titleOf, walk } from './store.js';
 import { buildSizes, computeLayout, edgePath } from './layout.js';
 import { DetailSheet, TasksSheet, Menu } from './Panels.jsx';
 import { SendSheet, CalendarSheet } from './SharePanels.jsx';
@@ -15,7 +15,7 @@ const MAX_K = 2.5;
 export const StatusIcon = ({ status, size = 18 }) =>
   status === 'done' ? <CheckCircle2 size={size} /> : status === 'doing' ? <CircleDot size={size} /> : <Circle size={size} />;
 
-export default function Editor({ map, onChange, onBack, onExport }) {
+export default function Editor({ map, onChange, onBack, onExport, onToggleDone, onPickCategory }) {
   const [selectedId, setSelectedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
@@ -560,6 +560,8 @@ export default function Editor({ map, onChange, onBack, onExport }) {
               { label: '모두 펼치기', run: () => setAllCollapsed(false) },
               { label: '모두 접기', run: () => setAllCollapsed(true) },
               { label: '화면에 맞추기', run: () => fit() },
+              { label: map.completedAt ? '완료 취소' : '프로젝트 완료 (공원에 심기)', run: onToggleDone },
+              { label: `주제 바꾸기 (지금: ${CATEGORIES[categoryOf(map)].label})`, run: onPickCategory },
               { label: '이 마인드맵 내보내기 (JSON)', run: onExport },
             ]}
           />
@@ -659,7 +661,15 @@ export default function Editor({ map, onChange, onBack, onExport }) {
           <button onClick={() => fit()} aria-label="화면에 맞추기"><Maximize size={18} /></button>
         </div>
 
-        {!selected && !sheet && <div className="hint">가지를 눌러 선택 · 두 번 눌러 이름 수정 · 길게 눌러 옮기기</div>}
+        {!selected && !sheet && (
+          !map.completedAt && total.total > 0 && total.done === total.total ? (
+            <button className="hint plant-cta" onClick={onToggleDone}>
+              할 일을 모두 끝냈어요 · 프로젝트를 완료하고 공원에 심기
+            </button>
+          ) : (
+            <div className="hint">{map.completedAt ? '완료한 프로젝트 · 공원에서 자란 모습을 볼 수 있어요' : '가지를 눌러 선택 · 두 번 눌러 이름 수정 · 길게 눌러 옮기기'}</div>
+          )
+        )}
 
         {selected && (
           <div className="toolbar">
@@ -692,7 +702,7 @@ export default function Editor({ map, onChange, onBack, onExport }) {
         )}
 
         {sheet === 'send' && (
-          <SendSheet root={root} branch={selected && selected.parent ? selected.node : null} onClose={() => setSheet(null)} />
+          <SendSheet root={root} defaultKind={categoryOf(map) === 'app' ? 'app' : 'report'} branch={selected && selected.parent ? selected.node : null} onClose={() => setSheet(null)} />
         )}
         {sheet === 'calendar' && (
           <CalendarSheet root={root} onFocus={focusNode} onClose={() => setSheet(null)} />

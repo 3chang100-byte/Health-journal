@@ -52,8 +52,8 @@ const shortDate = (iso) => {
   return Number.isNaN(d.getTime()) ? '' : `${d.getMonth() + 1}/${d.getDate()}`;
 };
 
-export function SendSheet({ root, branch, onClose }) {
-  const [kind, setKind] = useState('report');
+export function SendSheet({ root, branch, defaultKind = 'report', onClose }) {
+  const [kind, setKind] = useState(defaultKind);
   const [onlyBranch, setOnlyBranch] = useState(false);
   const [sent, setSent] = useState(null); // { tone: 'ok' | 'warn', text }
   const [dest, setDest] = useState('new'); // 'new' | 'live:<id>' | 'saved:<url>'
