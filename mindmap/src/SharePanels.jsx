@@ -46,7 +46,7 @@ export function CopySheet({ root, branch, defaultKind = 'report', onClose }) {
         <Copy size={18} /> {status === 'ok' ? '복사했어요' : '전체 복사'}
       </button>
       {status === 'fail' && <p className="send-status warn" role="status">복사하지 못했어요. 위 내용을 길게 눌러(또는 Ctrl+A) 직접 복사해 주세요.</p>}
-      <p className="fine">{kind === 'schedule' ? '마감일이 있거나 이름에 날짜(실행일)가 적힌 가지와 그 아래 내용을 날짜순으로 모았습니다. 메신저, 메모, Claude 어디에든 붙여 넣을 수 있어요.' : '복사한 뒤 Claude(채팅, 코워크, 클로드 코드) 입력란에 붙여 넣고 보내면 됩니다.'}</p>
+      <p className="fine">{kind === 'schedule' ? '날짜가 있는 가지만 날짜순으로 짧게 정리했습니다. 끝낸 일정은 빠져 있어요. 받는 사람에 맞게 고친 뒤 메신저에 붙여 넣으세요.' : '복사한 뒤 Claude(채팅, 코워크, 클로드 코드) 입력란에 붙여 넣고 보내면 됩니다.'}</p>
     </Sheet>
   );
 }

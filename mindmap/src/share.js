@@ -1,5 +1,5 @@
 // Claude에 붙여 넣을 글 만들기와 캘린더 내보내기
-import { STATUS_LABEL, stats, todayStr, walk } from './store.js';
+import { stats, todayStr, walk } from './store.js';
 
 const MARK = { todo: '[ ] ', doing: '[~] ', done: '[x] ' };
 const oneLine = (s) => (s || '').trim().replace(/\s*\n\s*/g, ' / ') || '제목 없음';
@@ -58,46 +58,35 @@ export function buildPrompt(kind, node) {
 }
 
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
-const dayDiff = (a, b) => Math.round((new Date(`${a}T00:00:00`) - new Date(`${b}T00:00:00`)) / 86400000);
 
-/** 마감일이 있거나 이름에 날짜(실행일)가 적힌 가지만 모아 날짜순으로 정리한 글 */
+// 이름에 적힌 날짜는 앞에 따로 쓰므로 제목에서는 뺀다
+const withoutDate = (title) =>
+  title
+    .replace(/\d{4}\s*[-./]\s*\d{1,2}\s*[-./]\s*\d{1,2}\.?|\d{4}년\s*\d{1,2}월\s*\d{1,2}일|\d{1,2}월\s*\d{1,2}일|(?<![\d/.])\d{1,2}\/\d{1,2}(?![\d/.])/, '')
+    .replace(/^[\s,·:()\-–~]+|[\s,·:(\-–~]+$/g, '')
+    .replace(/\s{2,}/g, ' ') || title;
+
+/** 상대에게 메시지로 보낼 수 있는 짧은 일정 안내: 날짜순, 끝낸 일정은 빼고 한 줄에 하나씩 */
 export function buildSchedule(node, today = todayStr()) {
-  const items = datedItems(node);
   const title = oneLine(node.text);
+  const items = datedItems(node).filter((it) => it.status !== 'done');
   if (!items.length) {
-    return `# ${title} 일정 요약 (${today} 기준)\n\n날짜가 있는 가지가 없습니다. 가지의 ‘상세’에서 마감일을 정하거나, 이름에 ‘12/3’, ‘12월 3일’처럼 실행일을 적으면 여기에 정리됩니다.`;
+    return `[${title}] 안내할 일정이 없습니다.\n\n가지의 ‘상세’에서 마감일을 정하거나, 이름에 ‘12/3’, ‘12월 3일’처럼 날짜를 적으면 여기에 정리됩니다.`;
   }
-  const open = items.filter((it) => it.status !== 'done');
-  const groups = [
-    ['지난 일정 (아직 끝내지 못함)', open.filter((it) => it.date < today)],
-    ['오늘', open.filter((it) => it.date === today)],
-    ['앞으로 7일', open.filter((it) => it.date > today && dayDiff(it.date, today) <= 7)],
-    ['그 이후', open.filter((it) => dayDiff(it.date, today) > 7)],
-    ['끝낸 일정', items.filter((it) => it.status === 'done')],
-  ];
+  const year = today.slice(0, 4);
   const line = (it) => {
-    const d = dayDiff(it.date, today);
-    const when = it.status === 'done' ? '' : d === 0 ? 'D-day' : d > 0 ? `D-${d}` : `${-d}일 지남`;
-    const meta = [
-      it.fromText ? '실행일' : '마감일',
-      it.status ? STATUS_LABEL[it.status] : null,
-      when || null,
-      it.path ? `위치: ${it.path}` : null,
-    ].filter(Boolean).join(' · ');
-    const out = [`- ${it.date}(${WEEK[new Date(`${it.date}T00:00:00`).getDay()]}) ${it.title}`, `  - ${meta}`];
-    if (it.note) out.push(`  - 메모: ${it.note.trim().replace(/\s*\n\s*/g, ' / ')}`);
-    if (it.node.children.length) {
-      out.push('  - 포함된 내용:');
-      for (const c of it.node.children) out.push(toOutline(c, 2));
-    }
+    const [y, m, d] = it.date.split('-').map(Number);
+    const day = `${String(y) === year ? '' : `${y}/`}${m}/${d}(${WEEK[new Date(`${it.date}T00:00:00`).getDay()]})`;
+    const out = [`· ${day} ${withoutDate(it.title)}${it.date === today ? ' (오늘)' : ''}`];
+    const subs = it.node.children.map((c) => oneLine(c.text));
+    if (subs.length) out.push(`   - ${subs.slice(0, 5).join(', ')}${subs.length > 5 ? ` 외 ${subs.length - 5}건` : ''}`);
     return out.join('\n');
   };
-  const counts = groups.filter(([, list]) => list.length).map(([name, list]) => `${name.replace(/ \(.*\)/, '')} ${list.length}`).join(' · ');
-  const parts = [`# ${title} 일정 요약 (${today} 기준)`, '', `날짜가 있는 항목 ${items.length}개: ${counts}`];
-  for (const [name, list] of groups) {
-    if (list.length) parts.push('', `## ${name}`, ...list.map(line));
-  }
-  parts.push('', '표기: [ ] 할 일 · [~] 진행 중 · [x] 완료 · 마감일 = 상세에서 정한 날짜 · 실행일 = 가지 이름에 적힌 날짜');
+  const late = items.filter((it) => it.date < today);
+  const coming = items.filter((it) => it.date >= today);
+  const parts = [`[${title}] 일정 안내`];
+  if (coming.length) parts.push('', ...coming.map(line));
+  if (late.length) parts.push('', '※ 날짜가 지난 일정', ...late.map(line));
   return parts.join('\n');
 }
 
