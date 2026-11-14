@@ -106,8 +106,8 @@ export function parseImport(text) {
 export const exportPayload = (maps) =>
   JSON.stringify({ app: 'project-mindmap', version: 1, exportedAt: new Date().toISOString(), maps }, null, 2);
 
-export function download(filename, text) {
-  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+export function download(filename, text, mime = 'application/json') {
+  const url = URL.createObjectURL(new Blob([text], { type: mime }));
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;

@@ -1,11 +1,12 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft, Undo2, Redo2, ListTodo, MoreVertical, Plus, Trash2, Pencil, Circle, CircleDot,
-  CheckCircle2, ZoomIn, ZoomOut, Maximize, CornerDownRight, SlidersHorizontal,
+  CheckCircle2, ZoomIn, ZoomOut, Maximize, CornerDownRight, SlidersHorizontal, Send, CalendarPlus,
 } from 'lucide-react';
 import { STATUSES, STATUS_LABEL, find, makeNode, stats, titleOf, walk } from './store.js';
 import { buildSizes, computeLayout, edgePath } from './layout.js';
 import { DetailSheet, TasksSheet, Menu } from './Panels.jsx';
+import { SendSheet, CalendarSheet } from './SharePanels.jsx';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const MIN_K = 0.25;
@@ -19,7 +20,7 @@ export default function Editor({ map, onChange, onBack, onExport }) {
   const [editingId, setEditingId] = useState(null);
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
   const [anim, setAnim] = useState(false);
-  const [sheet, setSheet] = useState(null); // 'detail' | 'tasks'
+  const [sheet, setSheet] = useState(null); // 'detail' | 'tasks' | 'send' | 'calendar'
   const [menu, setMenu] = useState(false);
   const [drag, setDrag] = useState(null);
   const [, bump] = useState(0);
@@ -643,6 +644,15 @@ export default function Editor({ map, onChange, onBack, onExport }) {
           </div>
         </div>
 
+        <div className="share">
+          <button className={sheet === 'send' ? 'on' : ''} onClick={() => setSheet(sheet === 'send' ? null : 'send')}>
+            <Send size={18} /><span>Claude로</span>
+          </button>
+          <button className={sheet === 'calendar' ? 'on' : ''} onClick={() => setSheet(sheet === 'calendar' ? null : 'calendar')}>
+            <CalendarPlus size={18} /><span>캘린더</span>
+          </button>
+        </div>
+
         <div className="zoom">
           <button onClick={() => zoomCenter(1.25)} aria-label="확대"><ZoomIn size={18} /></button>
           <button onClick={() => zoomCenter(0.8)} aria-label="축소"><ZoomOut size={18} /></button>
@@ -679,6 +689,13 @@ export default function Editor({ map, onChange, onBack, onExport }) {
         )}
         {sheet === 'tasks' && (
           <TasksSheet root={root} onCycle={cycleStatus} onFocus={focusNode} onClose={() => setSheet(null)} />
+        )}
+
+        {sheet === 'send' && (
+          <SendSheet root={root} branch={selected && selected.parent ? selected.node : null} onClose={() => setSheet(null)} />
+        )}
+        {sheet === 'calendar' && (
+          <CalendarSheet root={root} onFocus={focusNode} onClose={() => setSheet(null)} />
         )}
 
         {drag && (

@@ -23,7 +23,7 @@ export function Menu({ items, onClose }) {
   );
 }
 
-function Sheet({ title, onClose, children }) {
+export function Sheet({ title, onClose, children }) {
   return (
     <aside className="sheet">
       <div className="sheet-head">

@@ -192,6 +192,16 @@ h1, h2, h3, p { margin: 0; }
 .zoom button + button { border-top: 1px solid var(--line); }
 .zoom button:hover { background: var(--surface-2); }
 
+.share {
+  position: absolute; left: 12px; bottom: calc(92px + var(--sb));
+  display: grid; border-radius: 12px; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+}
+.share button { width: 58px; height: 52px; display: grid; place-items: center; align-content: center; gap: 3px; font-size: 10.5px; color: var(--ink); }
+.share button + button { border-top: 1px solid var(--line); }
+.share button:hover { background: var(--surface-2); }
+.share button.on { color: var(--accent); background: var(--surface-2); }
+
 .hint {
   position: absolute; left: 50%; bottom: calc(22px + var(--sb)); transform: translateX(-50%);
   max-width: calc(100% - 24px); padding: 8px 14px; border-radius: 999px;
@@ -271,7 +281,38 @@ h1, h2, h3, p { margin: 0; }
 .dialog textarea { width: 100%; font: 12px/1.4 ui-monospace, monospace; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; resize: vertical; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 
+.segmented.two { grid-template-columns: repeat(2, 1fr); }
+.check { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.preview { margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.preview summary { padding: 9px 12px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.preview pre { margin: 0; padding: 0 12px 12px; max-height: 180px; overflow: auto; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.send-actions { display: grid; gap: 8px; margin-top: 14px; }
+.send-btn {
+  display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center;
+  padding: 11px 14px; border-radius: 12px; text-decoration: none; text-align: left; width: 100%;
+  background: var(--accent); color: var(--accent-ink);
+}
+.send-btn strong { font-size: 15px; }
+.send-btn small { grid-column: 2; font-size: 12px; opacity: 0.85; }
+.send-btn svg { grid-row: span 2; }
+.send-btn.alt { background: var(--surface-2); color: var(--ink); }
+.send-status { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--done) 14%, var(--surface)); font-size: 13px; line-height: 1.5; }
+.fine { margin-top: 12px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+.cal-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.cal-item input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.cal-date { flex: none; width: 46px; text-align: center; font-variant-numeric: tabular-nums; }
+.cal-date b { display: block; font-size: 15px; }
+.cal-date small { color: var(--muted); font-size: 11.5px; }
+.cal-main { flex: 1; min-width: 0; text-align: left; display: grid; gap: 2px; }
+.cal-main span { font-size: 14.5px; line-height: 1.35; overflow-wrap: anywhere; }
+.cal-main small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.cal-add { flex: none; display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--accent); font-size: 12.5px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.cal-add:hover { border-color: var(--accent); }
+.cal-all { width: 100%; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; height: 44px; }
+
 @media (min-width: 760px) {
+  .share { bottom: 16px; }
   .sheet {
     left: auto; top: 12px; right: 12px; bottom: 12px; width: 340px; max-height: none;
     border: 1px solid var(--line); border-radius: 16px;

@@ -45,10 +45,16 @@ export default function App() {
   const open = (id) => { location.hash = `#m-${id}`; };
 
   // 파일 저장이 막힌 환경(미리보기 페이지 등)에서는 내용을 복사할 수 있게 보여 준다
-  const exportMaps = (filename, list) => {
+  const exportMaps = async (filename, list) => {
     const text = exportPayload(list);
-    if (window.MINDMAP_HOST?.noDownload) setDialog({ title: '백업 내용 복사', message: '이 화면에서는 파일 저장이 막혀 있어요. 아래 내용을 복사해 .json 파일로 보관하세요.', copyText: text });
-    else download(filename, text);
+    const host = window.MINDMAP_HOST;
+    if (!host?.noDownload) return download(filename, text);
+    try {
+      if (host.save && (await host.save(filename, text))) return;
+    } catch (err) {
+      if (err?.code === 'declined') return;
+    }
+    setDialog({ title: '백업 내용 복사', message: '이 화면에서는 파일 저장이 막혀 있어요. 아래 내용을 복사해 .json 파일로 보관하세요.', copyText: text });
   };
   const current = maps.find((m) => m.id === openId);
 
