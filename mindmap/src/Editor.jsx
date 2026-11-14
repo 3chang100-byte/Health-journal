@@ -3,7 +3,7 @@ import {
   ArrowLeft, Undo2, Redo2, ListTodo, MoreVertical, Plus, Trash2, Pencil, Circle, CircleDot,
   CheckCircle2, ZoomIn, ZoomOut, Maximize, CornerDownRight, SlidersHorizontal,
 } from 'lucide-react';
-import { STATUSES, STATUS_LABEL, find, makeNode, stats, titleOf, walk, exportPayload, download } from './store.js';
+import { STATUSES, STATUS_LABEL, find, makeNode, stats, titleOf, walk } from './store.js';
 import { buildSizes, computeLayout, edgePath } from './layout.js';
 import { DetailSheet, TasksSheet, Menu } from './Panels.jsx';
 
@@ -14,7 +14,7 @@ const MAX_K = 2.5;
 export const StatusIcon = ({ status, size = 18 }) =>
   status === 'done' ? <CheckCircle2 size={size} /> : status === 'doing' ? <CircleDot size={size} /> : <Circle size={size} />;
 
-export default function Editor({ map, onChange, onBack }) {
+export default function Editor({ map, onChange, onBack, onExport }) {
   const [selectedId, setSelectedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
@@ -559,7 +559,7 @@ export default function Editor({ map, onChange, onBack }) {
               { label: '모두 펼치기', run: () => setAllCollapsed(false) },
               { label: '모두 접기', run: () => setAllCollapsed(true) },
               { label: '화면에 맞추기', run: () => fit() },
-              { label: '이 마인드맵 내보내기 (JSON)', run: () => download(`${titleOf(map)}.json`, exportPayload([mapRef.current])) },
+              { label: '이 마인드맵 내보내기 (JSON)', run: onExport },
             ]}
           />
         )}

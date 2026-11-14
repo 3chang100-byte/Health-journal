@@ -13,24 +13,24 @@
   --danger: #d6336c;
   --shadow: 0 6px 24px rgba(20, 22, 30, 0.12);
   --font: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-  color-scheme: light dark;
+  --on-danger: #ffffff;
+  --st: env(safe-area-inset-top, 0px);
+  --sb: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #15171a;
-    --surface: #212429;
-    --surface-2: #2a2e34;
-    --ink: #e9e9e6;
-    --muted: #9aa1ab;
-    --line: #363b43;
-    --dot: #2b2f35;
-    --accent: #8da2fb;
-    --accent-ink: #11131a;
-    --done: #51cf66;
-    --doing: #ff922b;
-    --danger: #f783ac;
-    --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  :root:not([data-theme='light']) {
+    --bg: #15171a; --surface: #212429; --surface-2: #2a2e34; --ink: #e9e9e6; --muted: #9aa1ab;
+    --line: #363b43; --dot: #2b2f35; --accent: #8da2fb; --accent-ink: #11131a;
+    --done: #51cf66; --doing: #ff922b; --danger: #f783ac; --on-danger: #1a1012;
+    --shadow: 0 6px 24px rgba(0, 0, 0, 0.45); color-scheme: dark;
   }
+}
+:root[data-theme='dark'] {
+    --bg: #15171a; --surface: #212429; --surface-2: #2a2e34; --ink: #e9e9e6; --muted: #9aa1ab;
+    --line: #363b43; --dot: #2b2f35; --accent: #8da2fb; --accent-ink: #11131a;
+    --done: #51cf66; --doing: #ff922b; --danger: #f783ac; --on-danger: #1a1012;
+    --shadow: 0 6px 24px rgba(0, 0, 0, 0.45); color-scheme: dark;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -66,15 +66,15 @@ h1, h2, h3, p { margin: 0; }
 .bar i { display: block; height: 100%; background: var(--done); border-radius: 3px; transition: width 0.25s; }
 
 .save-banner {
-  position: fixed; z-index: 50; left: 12px; right: 12px; top: calc(8px + env(safe-area-inset-top));
+  position: fixed; z-index: 50; left: 12px; right: 12px; top: calc(8px + var(--st));
   padding: 10px 14px; border-radius: 10px;
-  background: var(--danger); color: #fff; font-size: 13px; box-shadow: var(--shadow);
+  background: var(--danger); color: var(--on-danger); font-size: 13px; box-shadow: var(--shadow);
 }
 
 /* ── 목록 ───────────────────────────────────── */
 .home {
   max-width: 960px; margin: 0 auto;
-  padding: calc(28px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
+  padding: calc(28px + var(--st)) 16px calc(32px + var(--sb));
 }
 .home-head { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
 .home-head h1 { font-size: 28px; letter-spacing: -0.02em; }
@@ -110,11 +110,11 @@ h1, h2, h3, p { margin: 0; }
 .menu .danger, .danger { color: var(--danger); }
 
 /* ── 편집 화면 ───────────────────────────────── */
-.editor { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.editor { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 .topbar {
   position: relative; z-index: 20; flex: none;
   display: flex; align-items: center; gap: 2px;
-  padding: calc(6px + env(safe-area-inset-top)) 8px 6px;
+  padding: calc(6px + var(--st)) 8px 6px;
   background: var(--surface); border-bottom: 1px solid var(--line);
 }
 .map-title { flex: 1; min-width: 0; font-size: 16px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 6px; }
@@ -181,10 +181,10 @@ h1, h2, h3, p { margin: 0; }
   font-size: 12px; font-weight: 600; line-height: 1; cursor: pointer;
   transition: left 0.18s ease, top 0.18s ease;
 }
-.toggle.closed { background: var(--c); color: #fff; }
+.toggle.closed { background: var(--c); color: var(--surface); }
 
 .zoom {
-  position: absolute; right: 12px; bottom: calc(92px + env(safe-area-inset-bottom));
+  position: absolute; right: 12px; bottom: calc(92px + var(--sb));
   display: grid; border-radius: 12px; overflow: hidden;
   background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
 }
@@ -193,14 +193,14 @@ h1, h2, h3, p { margin: 0; }
 .zoom button:hover { background: var(--surface-2); }
 
 .hint {
-  position: absolute; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: calc(22px + var(--sb)); transform: translateX(-50%);
   max-width: calc(100% - 24px); padding: 8px 14px; border-radius: 999px;
   background: var(--surface); border: 1px solid var(--line); color: var(--muted);
   font-size: 12.5px; text-align: center; pointer-events: none;
 }
 
 .toolbar {
-  position: absolute; z-index: 12; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  position: absolute; z-index: 12; left: 50%; bottom: calc(14px + var(--sb)); transform: translateX(-50%);
   display: flex; gap: 2px; padding: 5px; max-width: calc(100% - 16px);
   background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
 }
@@ -228,7 +228,7 @@ h1, h2, h3, p { margin: 0; }
   position: absolute; z-index: 14; left: 0; right: 0; bottom: 0; max-height: 62%;
   display: flex; flex-direction: column;
   background: var(--surface); border-top: 1px solid var(--line); border-radius: 18px 18px 0 0; box-shadow: var(--shadow);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: var(--sb);
 }
 .sheet-head { display: flex; align-items: center; gap: 8px; padding: 10px 8px 6px 18px; flex: none; }
 .sheet-head h2 { flex: 1; min-width: 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -261,6 +261,15 @@ h1, h2, h3, p { margin: 0; }
 .task-sub { display: flex; gap: 8px; font-size: 12px; color: var(--muted); }
 .task-sub b { font-weight: 600; flex: none; }
 .overdue { color: var(--danger); }
+
+.solid-btn { height: 38px; padding: 0 16px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-size: 14px; font-weight: 600; }
+.solid-btn.danger { background: var(--danger); color: var(--on-danger); }
+.dialog-wrap { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(10, 12, 16, 0.45); }
+.dialog { width: min(420px, 100%); padding: 20px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); display: grid; gap: 10px; }
+.dialog h2 { font-size: 17px; }
+.dialog p { color: var(--muted); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.dialog textarea { width: 100%; font: 12px/1.4 ui-monospace, monospace; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; resize: vertical; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 
 @media (min-width: 760px) {
   .sheet {

@@ -139,3 +139,35 @@ export function TasksSheet({ root, onCycle, onFocus, onClose }) {
     </Sheet>
   );
 }
+
+export function Dialog({ title, message, confirmLabel, danger, copyText, onConfirm, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async (e) => {
+    const box = e.currentTarget.closest('.dialog').querySelector('textarea');
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setCopied(true);
+    } catch {
+      box.focus();
+      box.select();
+    }
+  };
+  return (
+    <div className="dialog-wrap" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="dialog" role="dialog" aria-modal="true" aria-label={title}>
+        <h2>{title}</h2>
+        <p>{message}</p>
+        {copyText && <textarea id="export-text" readOnly rows={6} value={copyText} onFocus={(e) => e.target.select()} />}
+        <div className="dialog-actions">
+          <button className="ghost-btn" onClick={onClose}>{onConfirm ? '취소' : '닫기'}</button>
+          {copyText && <button className="solid-btn" onClick={copy}>{copied ? '복사됨' : '복사'}</button>}
+          {onConfirm && (
+            <button className={`solid-btn ${danger ? 'danger' : ''}`} onClick={() => { onConfirm(); onClose(); }}>
+              {confirmLabel || '확인'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
