@@ -20,10 +20,10 @@ export const makeMap = (title = '새 프로젝트') => ({
 
 // 프로젝트 주제 = 정원 구역 = 식물 종류
 export const CATEGORIES = {
-  app: { label: '앱 만들기', zone: '앱 만들기', plant: 'tree', plantName: '나무', desc: '아이디어를 정리해 Claude에 붙여 넣으면 앱 제작을 시작할 수 있어요. 정원에 나무로 자라요.' },
-  business: { label: '사업 확장', zone: '사업 확장', plant: 'fruit', plantName: '열매 나무', desc: '목표·고객·마케팅·실행 계획을 한 장에. 정원에 열매 나무로 자라요.' },
-  personal: { label: '개인 프로젝트', zone: '개인 정원', plant: 'flower', plantName: '꽃', desc: '하고 싶은 일을 목표와 첫 걸음으로. 정원에 꽃으로 자라요.' },
-  free: { label: '자유 프로젝트', zone: '기타', plant: 'bush', plantName: '덤불', desc: '빈 마인드맵에서 자유롭게 시작합니다. 정원에 덤불로 자라요.' },
+  app: { label: '앱 만들기', zone: '앱 만들기', plant: 'tree', plantName: '나무', desc: '만들고 싶은 앱이나 서비스. 나무로 자라요.' },
+  business: { label: '사업 확장', zone: '사업 확장', plant: 'fruit', plantName: '열매 나무', desc: '사업과 일에 관한 프로젝트. 열매 나무로 자라요.' },
+  personal: { label: '개인 정원', zone: '개인 정원', plant: 'flower', plantName: '꽃', desc: '개인적으로 하고 싶은 일. 꽃으로 자라요.' },
+  free: { label: '기타', zone: '기타', plant: 'bush', plantName: '덤불', desc: '그 밖의 모든 것. 덤불로 자라요.' },
 };
 /** 받침 유무에 맞는 조사를 붙인다: josa('꽃', '을', '를') → '꽃을' */
 export const josa = (word, withFinal, without) => {
@@ -33,38 +33,10 @@ export const josa = (word, withFinal, without) => {
 export const CATEGORY_KEYS = Object.keys(CATEGORIES);
 export const categoryOf = (map) => (CATEGORIES[map.category] ? map.category : 'free');
 
-const T = (text, children = [], extra = {}) => ({ ...makeNode(text, extra), children });
-const TEMPLATES = {
-  app: () => ['새 앱 프로젝트', [
-    T('목적', [T('누가 쓰나요'), T('어떤 문제를 해결하나요')]),
-    T('핵심 기능', [T('꼭 필요한 기능', [], { status: 'todo' }), T('있으면 좋은 기능')]),
-    T('화면 구성', [T('첫 화면'), T('주요 화면')]),
-    T('데이터', [T('저장할 정보')]),
-    T('만들기', [T('Claude에 붙여 넣어 첫 버전 만들기', [], { status: 'todo', note: '왼쪽 아래 ‘요약 복사’ → ‘앱 만들기’ → ‘전체 복사’ 후 Claude에 붙여 넣기' }), T('써 보고 고칠 점 적기', [], { status: 'todo' })]),
-  ]],
-  business: () => ['새 사업 프로젝트', [
-    T('목표', [T('매출·고객 목표'), T('기한')]),
-    T('고객', [T('누구에게 파나요'), T('고객이 원하는 것')]),
-    T('상품·서비스', [T('지금 있는 것'), T('새로 더할 것')]),
-    T('마케팅', [T('알릴 채널'), T('첫 홍보', [], { status: 'todo' })]),
-    T('운영', [T('필요한 사람'), T('비용')]),
-    T('실행 계획', [T('이번 달 할 일', [], { status: 'todo' })]),
-  ]],
-  personal: () => ['새 개인 프로젝트', [
-    T('왜 하고 싶은가'),
-    T('목표', [T('끝났을 때의 모습')]),
-    T('준비', [T('필요한 것'), T('도와줄 사람')]),
-    T('실행', [T('첫 걸음', [], { status: 'todo' }), T('다음 걸음', [], { status: 'todo' })]),
-    T('기록', [T('배운 점')]),
-  ]],
-  free: () => ['새 프로젝트', []],
-};
-
-export function fromTemplate(category) {
-  const [title, children] = TEMPLATES[category]();
-  const map = makeMap(title);
+/** 고른 구역에 심을 빈 마인드맵 */
+export function newMapIn(category) {
+  const map = makeMap();
   map.category = category;
-  map.root.children = children;
   return map;
 }
 

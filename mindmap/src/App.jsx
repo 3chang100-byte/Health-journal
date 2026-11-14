@@ -6,7 +6,7 @@ import { Park, PlantView, TemplatePicker } from './Park.jsx';
 import ImportDialog from './ImportDialog.jsx';
 import SyncDialog from './SyncDialog.jsx';
 import { markDeleted, useSync } from './sync.js';
-import { CATEGORIES, categoryOf, josa, download, exportPayload, fromTemplate, loadMaps, makeMap, parseImport, reId, saveMaps, stats, titleOf } from './store.js';
+import { CATEGORIES, categoryOf, josa, download, exportPayload, newMapIn, loadMaps, makeMap, parseImport, reId, saveMaps, stats, titleOf } from './store.js';
 
 const routeId = () => (location.hash.match(/^#m-(.+)$/) || [])[1] || null;
 
@@ -81,7 +81,7 @@ export default function App() {
   const current = maps.find((m) => m.id === openId);
 
   const create = (category) => {
-    const m = fromTemplate(category);
+    const m = newMapIn(category);
     setMaps((ms) => [m, ...ms]);
     open(m.id);
   };
@@ -177,8 +177,8 @@ export default function App() {
         )}
         {picker && (
           <TemplatePicker
-            title="주제 바꾸기"
-            note="주제에 따라 정원에서 자라는 구역과 식물이 달라집니다. 마인드맵 내용은 그대로예요."
+            title="구역 바꾸기"
+            note="구역에 따라 정원에서 자라는 식물이 달라집니다. 마인드맵 내용은 그대로예요."
             onPick={(c) => patchMap(current.id, { category: c })}
             onClose={() => setPicker(null)}
           />
@@ -228,8 +228,8 @@ export default function App() {
       {importing && <ImportDialog onCreate={createFromTree} onClose={() => setImporting(false)} />}
       {picker === 'new' && (
         <TemplatePicker
-          title="새 마인드맵"
-          note="프로젝트 주제를 고르면 그에 맞는 가지가 미리 채워집니다."
+          title="새로 심기"
+          note="어느 구역에 심을지 고르면 빈 마인드맵으로 시작합니다. 구역은 나중에 바꿀 수 있어요."
           onPick={create}
           onClose={() => setPicker(null)}
         />
