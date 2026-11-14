@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: '프로젝트 마인드맵',
-        short_name: '마인드맵',
+        name: '생각의 정원',
+        short_name: '생각의 정원',
         description: '프로젝트를 가지로 펼치고 할 일까지 한 장에서 관리',
         theme_color: '#3b5bdb',
         background_color: '#f6f5f1',

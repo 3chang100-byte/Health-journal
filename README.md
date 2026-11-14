@@ -127,4 +127,4 @@ health-pwa/
 
 ## 함께 들어 있는 앱
 
-- [`mindmap/`](mindmap/README.md) — 프로젝트 마인드맵 PWA (이 저장소 안의 독립된 앱)
+- [`mindmap/`](mindmap/README.md) — 생각의 정원: 프로젝트 마인드맵 PWA (이 저장소 안의 독립된 앱)

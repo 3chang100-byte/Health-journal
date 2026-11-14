@@ -14,7 +14,7 @@
   --shadow: 0 6px 24px rgba(20, 22, 30, 0.12);
   --font: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
   --on-danger: #ffffff;
-  --bark: #7b5b3e; --leaf: #3f9b4f; --leaf-2: #7cc46a; --leaf-gold: #d99a1c; --leaf-gold-2: #f0c35a;
+  --bark: #7b5b3e; --leaf: #3f9b4f; --leaf-2: #7cc46a; --leaf-pale: #b7dba6; --leaf-vein: rgba(20, 60, 25, 0.35);
   --fruit: #e03131; --bud: #c9c6ba; --pollen: #f2b632; --ground: #dbe7c6; --ground-2: #c7dbab;
   --st: env(safe-area-inset-top, 0px);
   --sb: env(safe-area-inset-bottom, 0px);
@@ -25,7 +25,7 @@
     --bg: #15171a; --surface: #212429; --surface-2: #2a2e34; --ink: #e9e9e6; --muted: #9aa1ab;
     --line: #363b43; --dot: #2b2f35; --accent: #8da2fb; --accent-ink: #11131a;
     --done: #51cf66; --doing: #ff922b; --danger: #f783ac; --on-danger: #1a1012;
-    --bark: #b18d6a; --leaf: #4fb262; --leaf-2: #86cf78; --leaf-gold: #e3ac3a; --leaf-gold-2: #f3d07a;
+    --bark: #b18d6a; --leaf: #4fb262; --leaf-2: #86cf78; --leaf-pale: #41603d; --leaf-vein: rgba(10, 30, 12, 0.45);
     --fruit: #ff6b6b; --bud: #5a5f57; --pollen: #f5c451; --ground: #26321f; --ground-2: #1e2919;
     --shadow: 0 6px 24px rgba(0, 0, 0, 0.45); color-scheme: dark;
   }
@@ -34,7 +34,7 @@
     --bg: #15171a; --surface: #212429; --surface-2: #2a2e34; --ink: #e9e9e6; --muted: #9aa1ab;
     --line: #363b43; --dot: #2b2f35; --accent: #8da2fb; --accent-ink: #11131a;
     --done: #51cf66; --doing: #ff922b; --danger: #f783ac; --on-danger: #1a1012;
-    --bark: #b18d6a; --leaf: #4fb262; --leaf-2: #86cf78; --leaf-gold: #e3ac3a; --leaf-gold-2: #f3d07a;
+    --bark: #b18d6a; --leaf: #4fb262; --leaf-2: #86cf78; --leaf-pale: #41603d; --leaf-vein: rgba(10, 30, 12, 0.45);
     --fruit: #ff6b6b; --bud: #5a5f57; --pollen: #f5c451; --ground: #26321f; --ground-2: #1e2919;
     --shadow: 0 6px 24px rgba(0, 0, 0, 0.45); color-scheme: dark;
 }
@@ -336,37 +336,20 @@ h1, h2, h3, p { margin: 0; }
 .segmented.two { grid-template-columns: repeat(2, 1fr); }
 .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; cursor: pointer; }
 .check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
-.preview { margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
-.preview summary { padding: 9px 12px; font-size: 13px; color: var(--muted); cursor: pointer; }
-.preview pre { margin: 0; padding: 0 12px 12px; max-height: 180px; overflow: auto; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
-.send-actions { display: grid; gap: 8px; margin-top: 14px; }
-.send-btn {
-  display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center;
-  padding: 11px 14px; border-radius: 12px; text-decoration: none; text-align: left; width: 100%;
-  background: var(--accent); color: var(--accent-ink);
-}
-.send-btn strong { font-size: 15px; }
-.send-btn small { grid-column: 2; font-size: 12px; opacity: 0.85; }
-.send-btn svg { grid-row: span 2; }
-.send-btn.alt { background: var(--surface-2); color: var(--ink); }
 .send-status { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--done) 14%, var(--surface)); font-size: 13px; line-height: 1.5; }
 .send-status.warn { background: color-mix(in srgb, var(--doing) 16%, var(--surface)); }
-.send-btn:disabled { opacity: 0.6; }
-.rooms { display: grid; gap: 6px; }
-.room { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
-.room.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
-.room label { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; }
-.room input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; margin: 0; }
-.room-text { min-width: 0; display: grid; gap: 1px; }
-.room-text b { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
-.room-text small { color: var(--muted); font-size: 12px; }
-.room .icon-btn { width: 34px; height: 34px; margin-right: 4px; color: var(--muted); }
-.room-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-.room-tools .ghost-btn { height: 34px; font-size: 13px; }
-.room-form { display: grid; gap: 8px; margin-top: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
-.room-form input { font: inherit; font-size: 16px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; min-width: 0; }
-.room-form p { font-size: 12.5px; line-height: 1.5; }
-.room-form .solid-btn { justify-self: end; }
+.copy-text { display: block; width: 100%; min-height: 200px; resize: vertical; font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.copy-btn { width: 100%; height: 46px; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
+.del-choice {
+  position: absolute; z-index: 13; left: 50%; bottom: calc(84px + var(--sb)); transform: translateX(-50%);
+  width: min(340px, calc(100% - 24px)); display: grid; gap: 8px; padding: 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow);
+}
+.del-choice p { font-size: 13.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.del-choice .ghost-btn { height: auto; min-height: 44px; padding: 8px 12px; justify-content: space-between; white-space: normal; text-align: left; }
+.del-choice .ghost-btn small { color: var(--muted); font-size: 12px; flex: none; }
+.del-choice .ghost-btn.danger { border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); }
+.del-choice .text-btn { justify-self: center; color: var(--muted); }
 .fine { margin-top: 12px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
 .cal-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .cal-item input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }

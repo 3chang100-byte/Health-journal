@@ -161,7 +161,7 @@ export default function App() {
       {banner}
       <header className="home-head">
         <div>
-          <h1>마인드맵</h1>
+          <h1>생각의 정원</h1>
           <p>프로젝트를 가지로 펼치고, 끝낸 프로젝트로 공원을 가꿔요.</p>
         </div>
         <div className="home-actions">

@@ -1,5 +1,5 @@
-// Claude로 보내기(프롬프트·링크)와 캘린더 내보내기
-import { walk } from './store.js';
+// Claude에 붙여 넣을 글 만들기와 캘린더 내보내기
+import { stats, walk } from './store.js';
 
 const MARK = { todo: '[ ] ', doing: '[~] ', done: '[x] ' };
 const oneLine = (s) => (s || '').trim().replace(/\s*\n\s*/g, ' / ') || '제목 없음';
@@ -29,28 +29,32 @@ const INSTRUCTIONS = {
   ],
 };
 
+function summaryLines(node) {
+  const s = stats(node);
+  const lines = [`- 가지 ${s.nodes - 1}개`];
+  if (s.total) {
+    lines.push(`- 할 일 ${s.total}개: 완료 ${s.done} · 진행 중 ${s.doing} · 남은 일 ${s.todo} (진행률 ${Math.round((s.done / s.total) * 100)}%)`);
+  }
+  const due = datedItems(node).filter((it) => it.status !== 'done').slice(0, 5);
+  if (due.length) lines.push(`- 다가오는 일정: ${due.map((it) => `${it.date} ${it.title}`).join(', ')}`);
+  return lines.join('\n');
+}
+
+/** Claude에 붙여 넣을 글: 지시문 + 요약 + 정리한 마인드맵 */
 export function buildPrompt(kind, node) {
-  const head = INSTRUCTIONS[kind].join('\n');
-  const body = [
+  return [
+    INSTRUCTIONS[kind].join('\n'),
+    '',
     `## 마인드맵: ${oneLine(node.text)}`,
+    '',
+    '### 요약',
+    summaryLines(node),
+    '',
+    '### 내용',
     '표기: [ ] 할 일 · [~] 진행 중 · [x] 완료 · (마감 날짜) · > 메모',
     '',
     toOutline(node),
   ].join('\n');
-  return { head, text: `${head}\n\n${body}` };
-}
-
-// 주소에 담을 수 있는 길이를 넘으면 지시문만 싣고, 본문은 클립보드에서 붙여 넣게 한다
-const URL_LIMIT = 12000;
-const BASE = { cowork: 'claude://cowork/new?q=', code: 'https://claude.ai/code?prompt=' };
-
-export function sendLink(target, prompt) {
-  let q = encodeURIComponent(prompt.text);
-  const full = q.length <= URL_LIMIT;
-  if (!full) {
-    q = encodeURIComponent(`${prompt.head}\n\n(마인드맵 내용은 클립보드에 복사해 두었습니다. 이 아래에 붙여 넣겠습니다.)\n`);
-  }
-  return { href: BASE[target] + q, full };
 }
 
 export async function copyText(text) {

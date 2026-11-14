@@ -37,48 +37,44 @@ function finish(geo) {
   return geo;
 }
 
-// ── 나무: 줄기 = 중심 주제, 가지 = 하위 가지, 잎 = 끝난 일 ──
+// ── 나무: 줄기 = 중심 주제, 가지 = 하위 가지, 잎 = 맨 끝 항목 ──
 function treeGeo(map, { detail, fruit }) {
   const geo = { segs: [], blobs: [], labels: [] };
   const done = !!map.completedAt;
   const total = size(map.root);
   const k = detail ? 1.7 : 1;
-  const leafFill = fruit ? 'var(--leaf-gold)' : 'var(--leaf)';
-  const leafSoft = fruit ? 'var(--leaf-gold-2)' : 'var(--leaf-2)';
+  // 잎은 가지 끝에서 가지가 뻗은 방향으로 난다. 색으로 진행 상태를 나타낸다.
+  const leaf = (x, y, ang, len, fill) =>
+    geo.blobs.push({ leaf: true, x, y, rx: len, ry: len * 0.36, rot: -ang, fill });
+  const tone = (n) => (done || n.status === 'done' ? 'var(--leaf)' : n.status === 'doing' ? 'var(--leaf-2)' : 'var(--leaf-pale)');
 
   const rec = (n, x, y, ang, len, w, depth) => {
     const x2 = x + Math.cos(rad(ang)) * len;
     const y2 = y - Math.sin(rad(ang)) * len;
     geo.segs.push({ x1: x, y1: y, x2, y2, w });
     const kids = n.children;
-    const alive = done || n.status === 'done';
-    const r = Math.max(3.2, 7.5 - depth * 0.9) * (detail ? 1.25 : 1);
+    const L = Math.max(9, 16 - depth * 1.4) * (detail ? 1.3 : 1);
 
-    if (!kids.length) {
-      if (alive) {
-        geo.blobs.push({ x: x2, y: y2, rx: r, ry: r, fill: leafFill });
-        if (done) {
-          // 완료한 프로젝트는 잎을 더해 울창하게
-          for (let i = 0; i < 2; i++) {
-            const a = rnd(n.id, i + 1) * Math.PI * 2;
-            geo.blobs.push({ x: x2 + Math.cos(a) * r * 0.9, y: y2 + Math.sin(a) * r * 0.9, rx: r * 0.8, ry: r * 0.8, fill: leafSoft });
-          }
-          if (fruit && (n.status === 'done' || rnd(n.id, 9) > 0.5)) {
-            geo.blobs.push({ x: x2 + r * 0.3, y: y2 + r * 0.5, rx: r * 0.42, ry: r * 0.42, fill: 'var(--fruit)' });
-          }
-        }
-      } else {
-        geo.blobs.push({ x: x2, y: y2, rx: r * 0.42, ry: r * 0.42, fill: n.status === 'doing' ? 'var(--doing)' : 'var(--bud)' });
+    if (!kids.length && depth > 0) {
+      leaf(x2, y2, ang, L, tone(n));
+      if (done) {
+        // 완료한 프로젝트는 곁잎이 돋아 울창해진다
+        leaf(x2, y2, ang + 42 + rnd(n.id, 1) * 14, L * 0.78, 'var(--leaf-2)');
+        leaf(x2, y2, ang - 42 - rnd(n.id, 2) * 14, L * 0.78, 'var(--leaf-2)');
       }
-    } else if (alive && depth > 0) {
-      geo.blobs.push({ x: x2, y: y2, rx: r * 0.75, ry: r * 0.75, fill: leafSoft });
+      if (fruit && n.status === 'done') {
+        geo.blobs.push({ x: x2 + 1.5, y: y2 + L * 0.34, rx: L * 0.24, ry: L * 0.24, fill: 'var(--fruit)', top: true });
+      }
+    } else if (done && depth > 0) {
+      leaf(x2, y2, ang + (rnd(n.id, 3) > 0.5 ? 62 : -62), L * 0.6, 'var(--leaf-2)');
     }
 
     if (detail && depth > 0) {
       const c = Math.cos(rad(ang));
+      const out = kids.length ? 3 : L + 2;
       geo.labels.push({
-        x: x2 + (c > 0.25 ? r + 2 : c < -0.25 ? -r - 2 : 0),
-        y: y2 + (Math.abs(c) <= 0.25 ? -r - 3 : 1.6),
+        x: x2 + (c > 0.25 ? out : c < -0.25 ? -out : 0),
+        y: y2 + (Math.abs(c) <= 0.25 ? -out - 1 : 1.8) - (kids.length ? 0 : Math.sin(rad(ang)) * L * 0.5),
         anchor: c > 0.25 ? 'start' : c < -0.25 ? 'end' : 'middle',
         text: short(n.text),
         strong: depth === 1,
@@ -98,7 +94,8 @@ function treeGeo(map, { detail, fruit }) {
   if (total === 1) {
     // 가지가 없으면 새싹 두 잎
     const top = geo.segs[0].y2;
-    geo.blobs.push({ x: -6, y: top, rx: 7, ry: 3.4, rot: 28, fill: leafSoft }, { x: 6, y: top, rx: 7, ry: 3.4, rot: -28, fill: leafSoft });
+    leaf(0, top, 150, 11, 'var(--leaf-2)');
+    leaf(0, top, 30, 11, 'var(--leaf-2)');
   }
   return finish(geo);
 }

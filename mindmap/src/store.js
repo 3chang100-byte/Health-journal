@@ -20,7 +20,7 @@ export const makeMap = (title = '새 프로젝트') => ({
 
 // 프로젝트 주제 = 공원 구역 = 식물 종류
 export const CATEGORIES = {
-  app: { label: '앱 만들기', zone: '앱 만들기', plant: 'tree', plantName: '나무', desc: '아이디어를 정리해 Claude로 보내면 앱 제작이 시작됩니다. 완료하면 나무가 돼요.' },
+  app: { label: '앱 만들기', zone: '앱 만들기', plant: 'tree', plantName: '나무', desc: '아이디어를 정리해 Claude에 붙여 넣으면 앱 제작을 시작할 수 있어요. 완료하면 나무가 돼요.' },
   business: { label: '사업 확장', zone: '사업 확장', plant: 'fruit', plantName: '열매 나무', desc: '목표·고객·마케팅·실행 계획을 한 장에. 완료하면 열매 나무가 돼요.' },
   personal: { label: '개인 프로젝트', zone: '개인 정원', plant: 'flower', plantName: '꽃', desc: '하고 싶은 일을 목표와 첫 걸음으로. 완료하면 꽃이 피어요.' },
   free: { label: '자유 프로젝트', zone: '기타', plant: 'bush', plantName: '덤불', desc: '빈 마인드맵에서 자유롭게 시작합니다. 완료하면 덤불이 돼요.' },
@@ -35,7 +35,7 @@ const TEMPLATES = {
     T('핵심 기능', [T('꼭 필요한 기능', [], { status: 'todo' }), T('있으면 좋은 기능')]),
     T('화면 구성', [T('첫 화면'), T('주요 화면')]),
     T('데이터', [T('저장할 정보')]),
-    T('만들기', [T('Claude로 보내 첫 버전 만들기', [], { status: 'todo', note: '왼쪽 아래 ‘Claude로’ → ‘앱 만들기’ → ‘클로드 코드로 보내기’' }), T('써 보고 고칠 점 적기', [], { status: 'todo' })]),
+    T('만들기', [T('Claude에 붙여 넣어 첫 버전 만들기', [], { status: 'todo', note: '왼쪽 아래 ‘요약 복사’ → ‘앱 만들기’ → ‘전체 복사’ 후 Claude에 붙여 넣기' }), T('써 보고 고칠 점 적기', [], { status: 'todo' })]),
   ]],
   business: () => ['새 사업 프로젝트', [
     T('목표', [T('매출·고객 목표'), T('기한')]),

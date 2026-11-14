@@ -14,7 +14,13 @@ const LEVELS = [
 function PlantShapes({ geo, labels }) {
   const under = geo.blobs.filter((b) => !b.top);
   const over = geo.blobs.filter((b) => b.top);
-  const blob = (b, i) => (
+  const blob = (b, i) => b.leaf ? (
+    // 잎: 가지 끝(밑동)에서 뾰족하게 뻗는 모양 + 잎맥
+    <g key={i} transform={`translate(${b.x} ${b.y}) rotate(${b.rot})`}>
+      <path d={`M0 0Q${b.rx * 0.45} ${-b.ry * 1.25} ${b.rx} 0Q${b.rx * 0.45} ${b.ry * 1.25} 0 0Z`} fill={b.fill} />
+      <line x1="0" y1="0" x2={b.rx * 0.82} y2="0" stroke="var(--leaf-vein)" strokeWidth={Math.max(0.35, b.rx * 0.04)} strokeLinecap="round" />
+    </g>
+  ) : (
     <ellipse key={i} cx={b.x} cy={b.y} rx={b.rx} ry={b.ry} fill={b.fill} opacity={b.opacity ?? 1} transform={b.rot ? `rotate(${b.rot} ${b.x} ${b.y})` : undefined} />
   );
   return (
@@ -136,7 +142,7 @@ export function PlantView({ map, onOpen, onToggleDone, onClose }) {
             <PlantShapes geo={geo} labels />
           </svg>
         </div>
-        <p className="fine">{info.plant === 'flower' ? '꽃잎 하나가 가지 하나입니다. 흐린 꽃잎은 아직 할 일이 남은 가지예요.' : info.plant === 'bush' ? '덩이 하나가 가지 하나이고, 열매는 끝낸 할 일입니다.' : '가지가 마인드맵의 가지이고, 잎은 끝낸 일입니다. 완료하면 잎이 모두 돋아요.'}</p>
+        <p className="fine">{info.plant === 'flower' ? '꽃잎 하나가 가지 하나입니다. 흐린 꽃잎은 아직 할 일이 남은 가지예요.' : info.plant === 'bush' ? '덩이 하나가 가지 하나이고, 열매는 끝낸 할 일입니다.' : '가지가 마인드맵의 가지이고, 잎 하나가 맨 끝 항목 하나입니다. 짙은 잎은 끝낸 일이고, 완료하면 곁잎까지 돋아요.'}</p>
         <footer>
           <div className="plant-zoom">
             <button className="icon-btn" onClick={() => setZoom((z) => Math.max(1, z - 0.5))} disabled={zoom <= 1} aria-label="축소"><ZoomOut size={18} /></button>

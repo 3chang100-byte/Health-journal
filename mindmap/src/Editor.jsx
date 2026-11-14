@@ -1,12 +1,13 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft, Undo2, Redo2, ListTodo, MoreVertical, Plus, Trash2, Pencil, Circle, CircleDot,
-  CheckCircle2, ZoomIn, ZoomOut, Maximize, CornerDownRight, SlidersHorizontal, Send, CalendarPlus,
+  CheckCircle2, ZoomIn, ZoomOut, Maximize, CornerDownRight, SlidersHorizontal, Copy, CalendarPlus,
 } from 'lucide-react';
 import { CATEGORIES, STATUSES, STATUS_LABEL, categoryOf, find, makeNode, stats, titleOf, walk } from './store.js';
 import { buildSizes, computeLayout, edgePath } from './layout.js';
 import { DetailSheet, TasksSheet, Menu } from './Panels.jsx';
-import { SendSheet, CalendarSheet } from './SharePanels.jsx';
+import { CopySheet, CalendarSheet } from './SharePanels.jsx';
+import { countNodes } from './share.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const MIN_K = 0.25;
@@ -23,6 +24,7 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
   const [sheet, setSheet] = useState(null); // 'detail' | 'tasks' | 'send' | 'calendar'
   const [menu, setMenu] = useState(false);
   const [drag, setDrag] = useState(null);
+  const [delAsk, setDelAsk] = useState(null);
   const [, bump] = useState(0);
 
   const canvasRef = useRef(null);
@@ -157,6 +159,7 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
   // ── 편집 ─────────────────────────────────────────────
   const select = (id, reveal = false) => {
     setSelectedId(id);
+    setDelAsk(null);
     if (!id) setSheet((s) => (s === 'detail' ? null : s));
     if (reveal) revealRef.current = id;
   };
@@ -226,12 +229,25 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
     startEdit(fresh.id, true);
   };
 
-  const removeNode = (id) => {
+  const removeNode = (id, withChildren) => {
     const hit = find(mapRef.current.root, id);
     if (!hit || !hit.parent) return;
     finishEdit();
-    mutate((r) => { const h = find(r, id); h.parent.children.splice(h.index, 1); });
+    // 기본은 선택한 가지만 지우고, 하위 가지는 그 자리로 올린다
+    mutate((r) => {
+      const h = find(r, id);
+      h.parent.children.splice(h.index, 1, ...(withChildren ? [] : h.node.children));
+    });
+    setDelAsk(null);
     select(hit.parent.id, true);
+  };
+
+  // 하위 가지가 있으면 어디까지 지울지 먼저 묻는다
+  const askRemove = (id) => {
+    const hit = find(mapRef.current.root, id);
+    if (!hit || !hit.parent) return;
+    if (hit.node.children.length) setDelAsk(id);
+    else removeNode(id, false);
   };
 
   const patchNode = (id, patch) =>
@@ -487,9 +503,10 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
         toggleCollapse(selectedId);
       } else if (k === 'Delete' || k === 'Backspace') {
         e.preventDefault();
-        removeNode(selectedId);
+        askRemove(selectedId);
       } else if (k === 'Escape') {
-        select(null);
+        if (delAsk) setDelAsk(null);
+        else select(null);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -648,7 +665,7 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
 
         <div className="share">
           <button className={sheet === 'send' ? 'on' : ''} onClick={() => setSheet(sheet === 'send' ? null : 'send')}>
-            <Send size={18} /><span>Claude로</span>
+            <Copy size={18} /><span>요약 복사</span>
           </button>
           <button className={sheet === 'calendar' ? 'on' : ''} onClick={() => setSheet(sheet === 'calendar' ? null : 'calendar')}>
             <CalendarPlus size={18} /><span>캘린더</span>
@@ -681,7 +698,16 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
               <span>{selected.node.status ? STATUS_LABEL[selected.node.status] : '상태'}</span>
             </button>
             <button onClick={() => { revealRef.current = selectedId; setSheet(sheet === 'detail' ? null : 'detail'); }} className={sheet === 'detail' ? 'on' : ''}><SlidersHorizontal size={18} /><span>상세</span></button>
-            {selected.parent && <button onClick={() => removeNode(selectedId)} className="danger"><Trash2 size={18} /><span>삭제</span></button>}
+            {selected.parent && <button onClick={() => askRemove(selectedId)} className="danger"><Trash2 size={18} /><span>삭제</span></button>}
+          </div>
+        )}
+
+        {delAsk && selected && delAsk === selectedId && (
+          <div className="del-choice" role="dialog" aria-label="삭제 범위 선택">
+            <p>‘{selected.node.text.split('\n')[0] || '제목 없음'}’ 아래에 가지가 {countNodes(selected.node) - 1}개 있어요.</p>
+            <button className="ghost-btn" onClick={() => removeNode(delAsk, false)}>이 가지만 삭제 <small>하위 가지는 한 단계 위로</small></button>
+            <button className="ghost-btn danger" onClick={() => removeNode(delAsk, true)}>하위 가지까지 모두 삭제 <small>{countNodes(selected.node)}개</small></button>
+            <button className="text-btn" onClick={() => setDelAsk(null)}>취소</button>
           </div>
         )}
 
@@ -702,7 +728,7 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
         )}
 
         {sheet === 'send' && (
-          <SendSheet root={root} defaultKind={categoryOf(map) === 'app' ? 'app' : 'report'} branch={selected && selected.parent ? selected.node : null} onClose={() => setSheet(null)} />
+          <CopySheet root={root} defaultKind={categoryOf(map) === 'app' ? 'app' : 'report'} branch={selected && selected.parent ? selected.node : null} onClose={() => setSheet(null)} />
         )}
         {sheet === 'calendar' && (
           <CalendarSheet root={root} onFocus={focusNode} onClose={() => setSheet(null)} />
