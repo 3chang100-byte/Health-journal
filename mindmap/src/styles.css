@@ -298,6 +298,23 @@ h1, h2, h3, p { margin: 0; }
 .send-btn svg { grid-row: span 2; }
 .send-btn.alt { background: var(--surface-2); color: var(--ink); }
 .send-status { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--done) 14%, var(--surface)); font-size: 13px; line-height: 1.5; }
+.send-status.warn { background: color-mix(in srgb, var(--doing) 16%, var(--surface)); }
+.send-btn:disabled { opacity: 0.6; }
+.rooms { display: grid; gap: 6px; }
+.room { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.room.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.room label { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; }
+.room input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; margin: 0; }
+.room-text { min-width: 0; display: grid; gap: 1px; }
+.room-text b { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.room-text small { color: var(--muted); font-size: 12px; }
+.room .icon-btn { width: 34px; height: 34px; margin-right: 4px; color: var(--muted); }
+.room-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.room-tools .ghost-btn { height: 34px; font-size: 13px; }
+.room-form { display: grid; gap: 8px; margin-top: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.room-form input { font: inherit; font-size: 16px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; min-width: 0; }
+.room-form p { font-size: 12.5px; line-height: 1.5; }
+.room-form .solid-btn { justify-self: end; }
 .fine { margin-top: 12px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
 .cal-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .cal-item input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
