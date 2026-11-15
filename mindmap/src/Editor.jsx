@@ -1,9 +1,9 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft, Undo2, Redo2, ListTodo, MoreVertical, Plus, Trash2, Pencil, Circle, CircleDot,
-  CheckCircle2, ZoomIn, ZoomOut, Maximize, CornerDownRight, SlidersHorizontal, Copy, CalendarPlus,
+  CheckCircle2, ZoomIn, ZoomOut, Maximize, CornerDownRight, SlidersHorizontal, Copy, CalendarPlus, Sprout, ArrowUpRight, CornerLeftUp,
 } from 'lucide-react';
-import { CATEGORIES, STATUSES, STATUS_LABEL, categoryOf, find, makeNode, stats, titleOf, walk } from './store.js';
+import { CATEGORIES, STATUSES, STATUS_LABEL, categoryOf, find, makeNode, newMapIn, stats, titleOf, walk } from './store.js';
 import { buildSizes, computeLayout, edgePath } from './layout.js';
 import { DetailSheet, TasksSheet, Menu } from './Panels.jsx';
 import { CopySheet, CalendarSheet } from './SharePanels.jsx';
@@ -16,7 +16,7 @@ const MAX_K = 2.5;
 export const StatusIcon = ({ status, size = 18 }) =>
   status === 'done' ? <CheckCircle2 size={size} /> : status === 'doing' ? <CircleDot size={size} /> : <Circle size={size} />;
 
-export default function Editor({ map, onChange, onBack, onExport, onToggleDone, onPickCategory, onShowPlant }) {
+export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, onExport, onToggleDone, onPickCategory, onShowPlant }) {
   const [selectedId, setSelectedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
@@ -41,7 +41,9 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
   const lastTap = useRef({ id: null, t: 0 });
 
   const root = map.root;
-  const sizes = useMemo(() => buildSizes(root, editingId), [root, editingId]);
+  // mapTitles: 지금 있는 마인드맵 id → 제목. 지워진 마인드맵으로 가는 연결은 표시하지 않는다
+  const sizes = useMemo(() => buildSizes(root, editingId, mapTitles), [root, editingId, mapTitles]);
+  const jump = (mapId) => { finishEdit(); location.hash = `#m-${mapId}`; };
   const layout = useMemo(() => computeLayout(root, map.layout, sizes), [root, map.layout, sizes]);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
@@ -250,6 +252,26 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
     else removeNode(id, false);
   };
 
+  // 가지를 새 마인드맵으로 심는다: 하위 가지는 새 마인드맵으로 옮기고, 이 가지에는 그곳으로 가는 연결을 남긴다
+  const plantBranch = (id) => {
+    finishEdit();
+    const hit = find(mapRef.current.root, id);
+    if (!hit || !hit.parent) return;
+    const child = newMapIn(categoryOf(mapRef.current));
+    child.parent = { mapId: mapRef.current.id };
+    child.root.text = hit.node.text;
+    if (hit.node.note) child.root.note = hit.node.note;
+    child.root.children = structuredClone(hit.node.children);
+    onCreateMap(child);
+    mutate((r) => {
+      const n = find(r, id).node;
+      n.children = [];
+      n.link = child.id;
+      delete n.collapsed;
+    });
+    setSelectedId(id);
+  };
+
   const patchNode = (id, patch) =>
     mutate((r) => {
       const n = find(r, id)?.node;
@@ -367,6 +389,7 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
       nodeId,
       toggleId: e.target.closest('[data-toggle]')?.dataset.toggle || null,
       onStatus: !!e.target.closest('[data-st]'),
+      jumpTo: e.target.closest('[data-jump]')?.dataset.jump || null,
       start: pt,
       view0: viewRef.current,
       pointerType: e.pointerType,
@@ -432,6 +455,7 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
     // 탭
     if (g.toggleId) return toggleCollapse(g.toggleId);
     if (!g.nodeId) return select(null);
+    if (g.jumpTo) return jump(g.jumpTo);
     if (g.onStatus) {
       select(g.nodeId);
       return cycleStatus(g.nodeId);
@@ -558,6 +582,11 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
     <div className="editor">
       <header className="topbar">
         <button className="icon-btn" onClick={onBack} aria-label="정원으로"><ArrowLeft size={20} /></button>
+        {map.parent && mapTitles.has(map.parent.mapId) && (
+          <button className="parent-chip" onClick={() => jump(map.parent.mapId)} title="이 가지가 뻗어 나온 마인드맵으로">
+            <CornerLeftUp size={15} /><span>{mapTitles.get(map.parent.mapId)}</span>
+          </button>
+        )}
         <h1 className="map-title">{titleOf(map)}</h1>
         {total.total > 0 && (
           <button className="progress-pill" onClick={() => setSheet(sheet === 'tasks' ? null : 'tasks')} title="할 일 목록">
@@ -628,6 +657,9 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
                     style={{ left: p.x, top: p.y, width: p.w, height: p.h, padding: `${s.pad.y}px ${s.pad.x}px`, '--c': p.color || 'var(--accent)' }}
                   >
                     {n.status && <span className={`st ${n.status}`} data-st="1"><StatusIcon status={n.status} /></span>}
+                    {n.link && mapTitles.has(n.link) && (
+                      <span className="jump" data-jump={n.link} title="이 가지의 마인드맵 열기"><ArrowUpRight size={15} /></span>
+                    )}
                     <div className="body">
                       {editing ? (
                         <textarea
@@ -694,6 +726,11 @@ export default function Editor({ map, onChange, onBack, onExport, onToggleDone, 
             <button onClick={() => addNode(selectedId, false)}><CornerDownRight size={19} /><span>하위</span></button>
             {selected.parent && <button onClick={() => addNode(selectedId, true)}><Plus size={19} /><span>형제</span></button>}
             <button onClick={() => startEdit(selectedId)}><Pencil size={18} /><span>수정</span></button>
+            {selected.parent && (selected.node.link && mapTitles.has(selected.node.link) ? (
+              <button className="on" onClick={() => jump(selected.node.link)}><ArrowUpRight size={19} /><span>열기</span></button>
+            ) : (
+              <button onClick={() => plantBranch(selectedId)}><Sprout size={19} /><span>심기</span></button>
+            ))}
             <button onClick={() => cycleStatus(selectedId)} className={selected.node.status ? `st ${selected.node.status}` : ''}>
               <StatusIcon status={selected.node.status} size={19} />
               <span>{selected.node.status ? STATUS_LABEL[selected.node.status] : '상태'}</span>

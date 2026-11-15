@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, MoreVertical, Upload, Download, CheckCircle2, Sprout, Mic, Cloud, CloudOff, AlertTriangle } from 'lucide-react';
 import Editor from './Editor.jsx';
 import { Dialog, Menu } from './Panels.jsx';
@@ -79,6 +79,7 @@ export default function App() {
     setDialog({ title: '백업 내용 복사', message: '이 화면에서는 파일 저장이 막혀 있어요. 아래 내용을 복사해 .json 파일로 보관하세요.', copyText: text });
   };
   const current = maps.find((m) => m.id === openId);
+  const mapTitles = useMemo(() => new Map(maps.map((m) => [m.id, titleOf(m)])), [maps]);
 
   const create = (category) => {
     const m = newMapIn(category);
@@ -159,6 +160,8 @@ export default function App() {
         <Editor
           key={current.id}
           map={current}
+          mapTitles={mapTitles}
+          onCreateMap={(m) => setMaps((ms) => [m, ...ms])}
           onChange={(next) => setMaps((ms) => ms.map((m) => (m.id === next.id ? next : m)))}
           onBack={() => { location.hash = ''; }}
           onExport={() => exportMaps(`${titleOf(current)}.json`, [mapsRef.current.find((m) => m.id === current.id)])}

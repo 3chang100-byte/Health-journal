@@ -9,6 +9,7 @@ const PAD = [
   { x: 11, y: 6 },
 ];
 const STATUS_W = 24;
+const LINK_W = 24; // 다른 마인드맵으로 가는 표시
 
 let ruler = null;
 const cache = new Map();
@@ -32,7 +33,7 @@ export function measure(text, cls) {
 }
 
 /** 노드별 박스 크기와 메타 표시(마감·메모·하위 진행률) 계산 */
-export function buildSizes(root, editingId) {
+export function buildSizes(root, editingId, links) {
   const sizes = new Map();
   const today = todayStr();
   const rec = (n, depth) => {
@@ -56,7 +57,7 @@ export function buildSizes(root, editingId) {
     const tw = Math.max(m.w, mm ? mm.w : 0, editing ? 56 : 18);
     const p = PAD[level];
     sizes.set(n.id, {
-      w: tw + (n.status ? STATUS_W : 0) + p.x * 2 + 4,
+      w: tw + (n.status ? STATUS_W : 0) + (n.link && links?.has(n.link) ? LINK_W : 0) + p.x * 2 + 4,
       h: m.h + (mm ? mm.h + 2 : 0) + p.y * 2 + 4,
       tw,
       th: m.h,
