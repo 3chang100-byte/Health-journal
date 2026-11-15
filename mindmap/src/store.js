@@ -95,6 +95,7 @@ function cleanNode(raw, budget) {
   if (typeof raw.due === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.due)) n.due = raw.due;
   if (typeof raw.color === 'string' && /^#[0-9a-f]{6}$/i.test(raw.color)) n.color = raw.color;
   if (raw.collapsed === true) n.collapsed = true;
+  if (typeof raw.link === 'string' && raw.link.length < 64) n.link = raw.link;
   if (Array.isArray(raw.children)) {
     n.children = raw.children.map((c) => cleanNode(c, budget)).filter(Boolean);
   }
@@ -113,6 +114,8 @@ function cleanMap(raw) {
     updatedAt: Number(raw.updatedAt) || Date.now(),
     ...(CATEGORIES[raw.category] ? { category: raw.category } : {}),
     ...(Number(raw.completedAt) > 0 ? { completedAt: Number(raw.completedAt) } : {}),
+    ...(typeof raw.parent?.mapId === 'string' ? { parent: { mapId: raw.parent.mapId } } : {}),
+    oldId: typeof raw.id === 'string' ? raw.id : null,
     root,
   };
 }
@@ -124,6 +127,20 @@ export function parseImport(text) {
   if (!list) throw new Error('마인드맵 파일 형식이 아닙니다.');
   const maps = list.map(cleanMap).filter(Boolean);
   if (!maps.length) throw new Error('가져올 마인드맵이 없습니다.');
+  // 가져오면서 id가 새로 매겨지므로, 마인드맵끼리 이어진 연결도 새 id로 옮긴다
+  const renamed = new Map(maps.filter((m) => m.oldId).map((m) => [m.oldId, m.id]));
+  for (const m of maps) {
+    delete m.oldId;
+    if (m.parent) {
+      if (renamed.has(m.parent.mapId)) m.parent.mapId = renamed.get(m.parent.mapId);
+      else delete m.parent;
+    }
+    walk(m.root, (n) => {
+      if (!n.link) return;
+      if (renamed.has(n.link)) n.link = renamed.get(n.link);
+      else delete n.link;
+    });
+  }
   return maps;
 }
 

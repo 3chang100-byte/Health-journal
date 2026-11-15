@@ -251,6 +251,22 @@ h1, h2, h3, p { margin: 0; }
 .st.doing { color: var(--doing); }
 .st.done { color: var(--done); }
 .node .st { width: 18px; height: 19px; margin-right: 6px; }
+.node .jump {
+  order: 2; flex: none; width: 19px; height: 19px; margin-left: 5px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); cursor: pointer;
+}
+.node.d0 .jump { background: var(--accent-ink); color: var(--accent); }
+.parent-chip {
+  display: inline-flex; align-items: center; gap: 4px; flex: none; max-width: 150px; height: 30px; padding: 0 9px; margin-left: 2px;
+  border-radius: 15px; background: var(--surface-2); color: var(--muted); font-size: 12.5px;
+}
+.parent-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.parent-chip:hover { color: var(--accent); }
+@media (max-width: 480px) {
+  .parent-chip { padding: 0 8px; }
+  .parent-chip span { display: none; }
+  .toolbar button { min-width: 45px; padding: 0 3px; }
+}
 
 .toggle {
   position: absolute; width: 22px; height: 22px; border-radius: 50%;
