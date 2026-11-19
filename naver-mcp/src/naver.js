@@ -44,7 +44,7 @@ export const SEARCH_TYPES = ['news', 'blog', 'cafearticle', 'local', 'webkr', 'k
 
 function hubHeaders(env) {
   // 클라우드 세션에서는 키 값을 환경에 두지 않고 프록시가 헤더에 넣어 준다. 그때는 자리표시 값만 보낸다.
-  const viaProxy = Boolean(env.NAVER_HUB_KEY_VIA_PROXY);
+  const viaProxy = Boolean(env.HTTPS_PROXY || env.https_proxy);
   need(env, viaProxy ? ['NAVER_HUB_KEY_ID'] : ['NAVER_HUB_KEY_ID', 'NAVER_HUB_KEY'], '검색');
   return { 'X-NCP-APIGW-API-KEY-ID': env.NAVER_HUB_KEY_ID, 'X-NCP-APIGW-API-KEY': env.NAVER_HUB_KEY || 'set-by-proxy' };
 }
