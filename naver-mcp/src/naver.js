@@ -42,8 +42,10 @@ const stripTags = (s) =>
 export const SEARCH_TYPES = ['news', 'blog', 'shop', 'cafearticle', 'local', 'webkr', 'kin', 'book', 'encyc', 'image', 'doc'];
 
 function openApiHeaders(env) {
-  need(env, ['NAVER_CLIENT_ID', 'NAVER_CLIENT_SECRET'], '검색');
-  return { 'X-Naver-Client-Id': env.NAVER_CLIENT_ID, 'X-Naver-Client-Secret': env.NAVER_CLIENT_SECRET };
+  // 클라우드 세션에서는 시크릿을 환경에 두지 않고 프록시가 헤더에 넣어 준다. 그때는 자리표시 값만 보낸다.
+  const viaProxy = Boolean(env.NAVER_SECRET_VIA_PROXY);
+  need(env, viaProxy ? ['NAVER_CLIENT_ID'] : ['NAVER_CLIENT_ID', 'NAVER_CLIENT_SECRET'], '검색');
+  return { 'X-Naver-Client-Id': env.NAVER_CLIENT_ID, 'X-Naver-Client-Secret': env.NAVER_CLIENT_SECRET || 'set-by-proxy' };
 }
 
 export async function search(env, { type, query, display = 10, start = 1, sort }) {
