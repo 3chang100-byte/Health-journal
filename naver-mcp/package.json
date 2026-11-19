@@ -4,16 +4,23 @@
   "description": "Claude에서 네이버(검색·카페·커머스·지도)를 다루는 MCP 서버",
   "type": "module",
   "private": true,
-  "bin": { "naver-mcp": "src/index.js" },
+  "bin": {
+    "naver-mcp": "src/index.js"
+  },
   "scripts": {
     "start": "node src/index.js",
     "auth": "node src/auth.js",
     "test": "node --test"
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
     "bcryptjs": "^2.4.3",
     "zod": "^3.23.8"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.63.0"
   }
 }

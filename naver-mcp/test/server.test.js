@@ -83,6 +83,7 @@ test('MCP 서버: 도구 목록, 키 없는 호출, 카페 미리보기', async 
   try {
     const { tools } = await client.listTools();
     assert.deepEqual(tools.map((x) => x.name).sort(), [
+      'naver_blog_draft',
       'naver_cafe_post',
       'naver_map_directions',
       'naver_map_geocode',
@@ -101,5 +102,41 @@ test('MCP 서버: 도구 목록, 키 없는 호출, 카페 미리보기', async 
     assert.equal(JSON.parse(preview.content[0].text).posted, false);
   } finally {
     await client.close();
+  }
+});
+
+test('blogDraft: 모의 에디터에 제목·본문 입력 후 저장', async (t) => {
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { pathToFileURL } = await import('node:url');
+  let playwright;
+  try {
+    playwright = await import('playwright');
+  } catch {
+    return t.skip('playwright 미설치');
+  }
+  const { blogDraft } = await import('../src/blog.js');
+  const env = {
+    NAVER_MCP_HEADLESS: '1',
+    NAVER_MCP_PROFILE_DIR: mkdtempSync(join(tmpdir(), 'naver-mcp-')),
+    NAVER_BLOG_WRITE_URL: pathToFileURL(join(import.meta.dirname, 'fixtures/editor.html')).href,
+  };
+  const contexts = [];
+  const orig = playwright.chromium.launchPersistentContext.bind(playwright.chromium);
+  t.mock.method(playwright.chromium, 'launchPersistentContext', async (...a) => {
+    const c = await orig(...a);
+    contexts.push(c);
+    return c;
+  });
+  try {
+    const out = await blogDraft(env, { title: '아침 산책 기록', content: '첫 문단입니다.\n\n둘째 문단 hello.', tags: ['건강'] });
+    assert.equal(out.status, 'draft_saved');
+    const page = contexts[0].pages().at(-1);
+    const saved = await page.frames().find((f) => f.name() === 'mainFrame').evaluate(() => window.saved);
+    assert.equal(saved.t.trim(), '아침 산책 기록');
+    assert.match(saved.b, /첫 문단입니다\.[\s\S]*둘째 문단 hello\./);
+  } finally {
+    for (const c of contexts) await c.close();
   }
 });

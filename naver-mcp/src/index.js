@@ -6,6 +6,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import * as naver from './naver.js';
+import { blogDraft } from './blog.js';
 
 const envFile = fileURLToPath(new URL('../.env', import.meta.url));
 if (existsSync(envFile)) process.loadEnvFile(envFile);
@@ -86,6 +87,23 @@ server.registerTool(
     if (!confirm) return { preview: post, posted: false, next: '사용자 승인 후 confirm=true 로 다시 호출하면 게시됩니다.' };
     return { posted: true, result: await naver.cafePost(env, post) };
   }),
+);
+
+server.registerTool(
+  'naver_blog_draft',
+  {
+    title: '네이버 블로그 글 입력 (임시저장)',
+    description:
+      '사용자 PC 에 전용 브라우저 창을 열어 네이버 블로그 에디터에 제목과 본문을 입력하고 임시저장합니다. 발행은 하지 않으며, 사용자가 창에서 확인 후 직접 발행합니다. 처음에는 사용자가 그 창에서 네이버에 직접 로그인해야 합니다(status=login_required 가 오면 안내 후 다시 호출). content 는 일반 텍스트이며 줄바꿈이 문단이 됩니다(마크다운·HTML 기호는 그대로 입력되므로 쓰지 마세요). 하루 한두 편 수준의 개인 글쓰기용이며 대량·반복 게시에 쓰지 마세요.',
+    inputSchema: {
+      title: z.string().min(1).max(100).describe('글 제목'),
+      content: z.string().min(1).describe('본문 (일반 텍스트)'),
+      tags: z.array(z.string()).max(30).optional().describe('추천 태그 — 입력하지 않고 사용자에게 안내만 합니다'),
+      saveDraft: z.boolean().default(true).describe('입력 후 임시저장 버튼을 누를지 여부'),
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
+  },
+  run((a) => blogDraft(env, a)),
 );
 
 server.registerTool(
