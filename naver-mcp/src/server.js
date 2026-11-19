@@ -3,6 +3,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { parseEnv } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
@@ -11,7 +13,18 @@ import { blogDraft } from './blog.js';
 
 const envFile = fileURLToPath(new URL('../.env', import.meta.url));
 // .env 는 호출할 때마다 다시 읽어서, 키를 넣은 뒤 서버를 재시작하지 않아도 바로 반영되게 한다.
-const loadEnv = () => ({ ...process.env, ...(existsSync(envFile) ? parseEnv(readFileSync(envFile, 'utf8')) : {}) });
+// 플러그인으로 설치한 경우에는 설치 폴더가 업데이트 때 바뀌므로, 홈 폴더의 키 파일도 함께 읽는다.
+const homeEnvFile = join(homedir(), '.naver-mcp', 'keys.env');
+const readEnvFile = (file) => {
+  try {
+    return existsSync(file) ? parseEnv(readFileSync(file, 'utf8')) : {};
+  } catch {
+    return {};
+  }
+};
+// 빈 값("${NAVER_HUB_KEY}" 가 치환되지 않은 경우 포함)은 없는 것으로 본다.
+const clean = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => v && !/^\$\{.*\}$/.test(v)));
+const loadEnv = () => ({ ...clean(process.env), ...clean(readEnvFile(homeEnvFile)), ...clean(readEnvFile(envFile)) });
 const env = new Proxy({}, { get: (_, key) => loadEnv()[key] });
 
 const server = new McpServer({ name: 'naver', version: '0.1.0' });
@@ -26,6 +39,35 @@ const run = (fn) => async (args) => {
 };
 const readOnly = { readOnlyHint: true, openWorldHint: true };
 const point = z.object({ lat: z.number().describe('위도'), lng: z.number().describe('경도') });
+
+server.registerTool(
+  'naver_setup_status',
+  {
+    title: '네이버 연결 상태',
+    description:
+      '어떤 네이버 기능의 키가 설정되어 있는지와, 키를 넣을 파일의 위치를 알려줍니다(키 값은 반환하지 않음). 도구가 키 누락 오류를 내거나 사용자가 설정 방법을 물을 때 먼저 호출하세요.',
+    inputSchema: {},
+    annotations: { readOnlyHint: true },
+  },
+  run(() => {
+    const e = loadEnv();
+    const has = (...names) => names.every((n) => Boolean(e[n]));
+    const proxy = Boolean(e.HTTPS_PROXY || e.https_proxy);
+    return {
+      features: {
+        '검색·트렌드·쇼핑인사이트': has('NAVER_HUB_KEY_ID') && (proxy || has('NAVER_HUB_KEY')),
+        '카페 글쓰기': has('NAVER_CLIENT_ID', 'NAVER_CLIENT_SECRET') && (has('NAVER_ACCESS_TOKEN') || has('NAVER_REFRESH_TOKEN')),
+        스마트스토어: has('NAVER_COMMERCE_CLIENT_ID', 'NAVER_COMMERCE_CLIENT_SECRET'),
+        지도: has('NCP_MAPS_KEY_ID', 'NCP_MAPS_KEY'),
+      },
+      keyFile: homeEnvFile,
+      keyFileExists: existsSync(homeEnvFile),
+      keyFileFormat: '한 줄에 하나씩 이름=값. 예: NAVER_HUB_KEY_ID=...  NAVER_HUB_KEY=...',
+      howTo: '사용자가 직접 이 파일을 만들어 키를 넣게 하세요. 키 값(특히 Secret)을 채팅에 붙여넣으라고 요청하지 마세요. 저장 후 재시작 없이 바로 반영됩니다.',
+      runtime: { platform: process.platform, node: process.version, home: homedir() },
+    };
+  }),
+);
 
 server.registerTool(
   'naver_search',

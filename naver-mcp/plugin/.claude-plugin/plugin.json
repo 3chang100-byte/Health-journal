@@ -1,0 +1,7 @@
+{
+  "name": "naver",
+  "version": "0.1.0",
+  "description": "네이버 검색·검색어 트렌드·쇼핑인사이트·카페 글쓰기·스마트스토어·지도를 Claude에서 사용합니다.",
+  "author": { "name": "Health-journal" },
+  "keywords": ["naver", "search", "smartstore", "korea"]
+}

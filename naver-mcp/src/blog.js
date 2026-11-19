@@ -17,7 +17,7 @@ async function getContext(env) {
   try {
     ({ chromium } = await import('playwright'));
   } catch {
-    throw new ConfigError('블로그 글 입력에는 Playwright 가 필요합니다. naver-mcp 폴더에서 `npm install playwright` 를 실행하세요.');
+    throw new ConfigError('이 설치에는 브라우저 자동화 모듈(Playwright)이 없어 블로그 글 입력을 쓸 수 없습니다. 내 PC 에서 저장소의 naver-mcp 를 `npm install` 로 설치해 실행하면 쓸 수 있습니다.');
   }
   const profile = env.NAVER_MCP_PROFILE_DIR || join(homedir(), '.naver-mcp', 'browser-profile');
   const options = { headless: env.NAVER_MCP_HEADLESS === '1', viewport: null };

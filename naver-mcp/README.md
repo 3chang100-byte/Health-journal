@@ -4,6 +4,7 @@ Claude에서 네이버를 다루는 MCP 서버입니다. 블로그 글 입력만
 
 | 도구 | 하는 일 | 필요한 키 |
 | --- | --- | --- |
+| `naver_setup_status` | 어떤 키가 설정됐는지, 키 파일을 어디에 둘지 확인 | 없음 |
 | `naver_search` | 뉴스·블로그·카페글·지역(플레이스)·웹문서·지식iN·백과사전·이미지 검색 | API HUB |
 | `naver_search_trend` | 검색어 트렌드 | API HUB |
 | `naver_shopping_insight` | 쇼핑 분야별·키워드별 클릭 추이 | API HUB |
@@ -81,6 +82,16 @@ cp .env.example .env
 
 - 키는 채팅에 붙여넣지 않습니다. API HUB 의 Client ID 처럼 비밀이 아닌 값은 `NAVER_HUB_KEY_ID` 로, Client Secret 은 Claude 가 띄우는 보안 입력 폼(네트워크 시크릿)으로 넣습니다. 클라우드 세션에서는 서버가 시크릿 없이 요청하고 프록시가 헤더를 채웁니다.
 - `naver_blog_draft` 는 클라우드에서 쓸 수 없습니다. 클라우드 컨테이너에는 직접 로그인할 화면이 없기 때문입니다. 블로그 글 입력은 내 PC 에서 실행할 때만 됩니다.
+
+## Cowork 플러그인
+
+`plugin/` 은 Cowork 용 플러그인 템플릿입니다. 아래 명령으로 `dist/naver.plugin` 을 만들어 Cowork 에 설치합니다. 서버가 파일 하나로 묶여 들어가므로 설치 후 `npm install` 이 필요 없습니다.
+
+```bash
+bash scripts/build-plugin.sh
+```
+
+키는 홈 폴더의 `~/.naver-mcp/keys.env` 에 넣습니다. 정확한 위치는 Claude 에게 "네이버 연결 상태 확인해줘" 라고 하면 알려줍니다(`naver_setup_status`). 플러그인에는 브라우저 자동화 모듈이 없어 블로그 글 입력은 빠집니다.
 
 ## 알아둘 점
 
