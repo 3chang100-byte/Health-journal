@@ -71,6 +71,32 @@ server.registerTool(
 );
 
 server.registerTool(
+  'naver_shopping_insight',
+  {
+    title: '네이버 쇼핑인사이트',
+    description:
+      '네이버 쇼핑의 클릭 추이(상대값, 최대 100)를 조회합니다. categories 를 주면 분야별 추이를, keywordCategory + keywords 를 주면 그 분야 안의 키워드별 추이를 반환합니다. 1차 분야 ID: 50000000 패션의류, 50000001 패션잡화, 50000002 화장품/미용, 50000003 디지털/가전, 50000004 가구/인테리어, 50000005 출산/육아, 50000006 식품, 50000007 스포츠/레저, 50000008 생활/건강, 50000009 여가/생활편의.',
+    inputSchema: {
+      startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('yyyy-mm-dd (2017-08-01 이후)'),
+      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      timeUnit: z.enum(['date', 'week', 'month']).default('week'),
+      categories: z
+        .array(z.object({ name: z.string(), id: z.string().regex(/^\d+$/) }))
+        .max(3)
+        .optional()
+        .describe('분야별 비교 (최대 3개)'),
+      keywordCategory: z.string().regex(/^\d+$/).optional().describe('키워드 추이를 볼 분야 ID'),
+      keywords: z.array(z.string()).max(5).optional().describe('키워드별 비교 (최대 5개)'),
+      device: z.enum(['pc', 'mo']).optional(),
+      gender: z.enum(['m', 'f']).optional(),
+      ages: z.array(z.enum(['10', '20', '30', '40', '50', '60'])).optional().describe('연령대'),
+    },
+    annotations: readOnly,
+  },
+  run((a) => naver.shoppingInsight(env, a)),
+);
+
+server.registerTool(
   'naver_cafe_post',
   {
     title: '네이버 카페 글쓰기',

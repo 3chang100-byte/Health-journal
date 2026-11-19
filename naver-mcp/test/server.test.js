@@ -90,6 +90,7 @@ test('MCP 서버: 도구 목록, 키 없는 호출, 카페 미리보기', async 
       'naver_map_reverse_geocode',
       'naver_search',
       'naver_search_trend',
+      'naver_shopping_insight',
       'naver_store_changed_orders',
       'naver_store_order_details',
       'naver_store_products',

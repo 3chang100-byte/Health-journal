@@ -79,6 +79,28 @@ export async function searchTrend(env, { startDate, endDate, timeUnit, keywordGr
   return request(`${HUB}/search-trend/v1/search`, { method: 'POST', headers, body: JSON.stringify(body) });
 }
 
+export async function shoppingInsight(env, { startDate, endDate, timeUnit, categories, keywordCategory, keywords, device, gender, ages }) {
+  const headers = { ...hubHeaders(env), 'Content-Type': 'application/json' };
+  const body = { startDate, endDate, timeUnit };
+  if (device) body.device = device;
+  if (gender) body.gender = gender;
+  if (ages?.length) body.ages = ages;
+  let path;
+  if (keywords?.length) {
+    // 한 분야 안에서 키워드별 클릭 추이
+    if (!keywordCategory) throw new Error('keywords 를 쓰려면 keywordCategory(분야 ID)가 필요합니다.');
+    path = '/shopping/v1/category/keywords';
+    body.category = keywordCategory;
+    body.keyword = keywords.map((k) => ({ name: k, param: [k] }));
+  } else {
+    // 분야별 클릭 추이
+    if (!categories?.length) throw new Error('categories 또는 keywords 중 하나가 필요합니다.');
+    path = '/shopping/v1/categories';
+    body.category = categories.map((c) => ({ name: c.name, param: [c.id] }));
+  }
+  return request(`${HUB}${path}`, { method: 'POST', headers, body: JSON.stringify(body) });
+}
+
 // ───────── 카페 글쓰기 (네이버 로그인 OAuth 토큰) ─────────
 
 let cachedUserToken = null;
