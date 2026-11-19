@@ -1,7 +1,8 @@
 // 네이버 API 클라이언트 모음. 각 함수는 필요한 환경변수가 없으면 설정 방법을 알려주는 오류를 던진다.
 import bcrypt from 'bcryptjs';
 
-const OPENAPI = 'https://openapi.naver.com';
+const OPENAPI = 'https://openapi.naver.com'; // 카페 글쓰기
+const HUB = 'https://naverapihub.apigw.ntruss.com'; // 검색·검색어 트렌드 (NAVER API HUB)
 const COMMERCE = 'https://api.commerce.naver.com/external';
 const MAPS = 'https://maps.apigw.ntruss.com';
 
@@ -39,20 +40,20 @@ const stripTags = (s) =>
 
 // ───────── 검색 / 데이터랩 ─────────
 
-export const SEARCH_TYPES = ['news', 'blog', 'shop', 'cafearticle', 'local', 'webkr', 'kin', 'book', 'encyc', 'image', 'doc'];
+export const SEARCH_TYPES = ['news', 'blog', 'cafearticle', 'local', 'webkr', 'kin', 'encyc', 'image'];
 
-function openApiHeaders(env) {
-  // 클라우드 세션에서는 시크릿을 환경에 두지 않고 프록시가 헤더에 넣어 준다. 그때는 자리표시 값만 보낸다.
-  const viaProxy = Boolean(env.NAVER_SECRET_VIA_PROXY);
-  need(env, viaProxy ? ['NAVER_CLIENT_ID'] : ['NAVER_CLIENT_ID', 'NAVER_CLIENT_SECRET'], '검색');
-  return { 'X-Naver-Client-Id': env.NAVER_CLIENT_ID, 'X-Naver-Client-Secret': env.NAVER_CLIENT_SECRET || 'set-by-proxy' };
+function hubHeaders(env) {
+  // 클라우드 세션에서는 키 값을 환경에 두지 않고 프록시가 헤더에 넣어 준다. 그때는 자리표시 값만 보낸다.
+  const viaProxy = Boolean(env.NAVER_HUB_KEY_VIA_PROXY);
+  need(env, viaProxy ? ['NAVER_HUB_KEY_ID'] : ['NAVER_HUB_KEY_ID', 'NAVER_HUB_KEY'], '검색');
+  return { 'X-NCP-APIGW-API-KEY-ID': env.NAVER_HUB_KEY_ID, 'X-NCP-APIGW-API-KEY': env.NAVER_HUB_KEY || 'set-by-proxy' };
 }
 
 export async function search(env, { type, query, display = 10, start = 1, sort }) {
-  const headers = openApiHeaders(env);
+  const headers = hubHeaders(env);
   const qs = new URLSearchParams({ query, display: String(display), start: String(start) });
   if (sort) qs.set('sort', sort);
-  const data = await request(`${OPENAPI}/v1/search/${type}.json?${qs}`, { headers });
+  const data = await request(`${HUB}/search/v1/${type}?${qs}`, { headers });
   return {
     total: data.total,
     start: data.start,
@@ -70,12 +71,12 @@ export async function search(env, { type, query, display = 10, start = 1, sort }
 }
 
 export async function searchTrend(env, { startDate, endDate, timeUnit, keywordGroups, device, gender, ages }) {
-  const headers = { ...openApiHeaders(env), 'Content-Type': 'application/json' };
+  const headers = { ...hubHeaders(env), 'Content-Type': 'application/json' };
   const body = { startDate, endDate, timeUnit, keywordGroups };
   if (device) body.device = device;
   if (gender) body.gender = gender;
   if (ages?.length) body.ages = ages;
-  return request(`${OPENAPI}/v1/datalab/search`, { method: 'POST', headers, body: JSON.stringify(body) });
+  return request(`${HUB}/search-trend/v1/search`, { method: 'POST', headers, body: JSON.stringify(body) });
 }
 
 // ───────── 카페 글쓰기 (네이버 로그인 OAuth 토큰) ─────────

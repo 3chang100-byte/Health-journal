@@ -32,16 +32,16 @@ server.registerTool(
   {
     title: '네이버 검색',
     description:
-      '네이버 검색 결과를 가져옵니다. type: news(뉴스) blog(블로그) shop(쇼핑) cafearticle(카페글) local(지역·플레이스, 결과에 lat/lng 포함) webkr(웹문서) kin(지식iN) book(책) encyc(백과사전) image(이미지) doc(전문자료).',
+      '네이버 검색 결과를 가져옵니다. type: news(뉴스) blog(블로그) cafearticle(카페글) local(지역·플레이스, 결과에 lat/lng 포함) webkr(웹문서) kin(지식iN) encyc(백과사전) image(이미지). 쇼핑·책·전문자료 검색은 네이버가 종료해 지원하지 않습니다.',
     inputSchema: {
       type: z.enum(naver.SEARCH_TYPES),
       query: z.string().min(1).describe('검색어'),
       display: z.number().int().min(1).max(100).default(10).describe('결과 개수 (local 은 최대 5)'),
       start: z.number().int().min(1).max(1000).default(1).describe('시작 위치'),
       sort: z
-        .enum(['sim', 'date', 'asc', 'dsc', 'random', 'comment'])
+        .enum(['sim', 'date', 'random', 'comment'])
         .optional()
-        .describe('sim=정확도, date=최신순. shop 은 asc/dsc(가격순) 추가, local 은 random(정확도)/comment(리뷰순)'),
+        .describe('sim=정확도, date=최신순. local 은 random(정확도)/comment(리뷰순)'),
     },
     annotations: readOnly,
   },

@@ -4,9 +4,9 @@ Claude에서 네이버를 다루는 MCP 서버입니다. 블로그 글 입력만
 
 | 도구 | 하는 일 | 필요한 키 |
 | --- | --- | --- |
-| `naver_search` | 뉴스·블로그·쇼핑·카페글·지역(플레이스)·웹문서·지식iN 등 검색 | 검색 |
-| `naver_search_trend` | 데이터랩 검색어 트렌드 | 검색 |
-| `naver_cafe_post` | 내 계정으로 카페 게시판에 글쓰기 (미리보기 → 승인 후 게시) | 검색 + 로그인 토큰 |
+| `naver_search` | 뉴스·블로그·카페글·지역(플레이스)·웹문서·지식iN·백과사전·이미지 검색 | API HUB |
+| `naver_search_trend` | 검색어 트렌드 | API HUB |
+| `naver_cafe_post` | 내 계정으로 카페 게시판에 글쓰기 (미리보기 → 승인 후 게시) | 개발자센터 + 로그인 토큰 |
 | `naver_blog_draft` | 내 PC 의 전용 브라우저 창에서 블로그 에디터에 글을 입력하고 임시저장 (발행은 직접) | 없음 (창에서 직접 로그인) |
 | `naver_store_products` | 스마트스토어 상품 목록 | 커머스 |
 | `naver_store_changed_orders` | 상태가 바뀐 주문 조회 | 커머스 |
@@ -28,8 +28,8 @@ cp .env.example .env
 
 ## 키 발급
 
-1. **검색·데이터랩** — [developers.naver.com/apps](https://developers.naver.com/apps) 에서 애플리케이션을 등록하고 사용 API 에 "검색", "데이터랩(검색어트렌드)" 를 추가 → `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`
-2. **카페 글쓰기** — 같은 애플리케이션에 "네이버 로그인" 과 "카페" 를 추가하고, Callback URL 에 `http://localhost:8787/callback` 을 등록한 뒤:
+1. **검색·검색어 트렌드** — 2026년 7월부터 개발자센터가 아니라 네이버 클라우드 플랫폼의 NAVER API HUB 에서 발급합니다. [ncloud.com](https://www.ncloud.com) 가입(결제 카드 등록 필요) → 콘솔 → 전체 서비스 → 애플리케이션 서비스 → NAVER API HUB → 이용 신청 → Application 등록에서 검색 API 선택 → 인증 정보의 Client ID 를 `NAVER_HUB_KEY_ID`, Client Secret 을 `NAVER_HUB_KEY` 에 넣습니다.
+2. **카페 글쓰기** — [developers.naver.com/apps](https://developers.naver.com/apps) 에서 사용 API 로 "네이버 로그인" 과 "카페" 를 골라 애플리케이션을 등록하고(`NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`), Callback URL 에 `http://localhost:8787/callback` 을 등록한 뒤:
    ```bash
    npm run auth
    ```
@@ -78,11 +78,13 @@ cp .env.example .env
 
 이 저장소로 클라우드 세션을 열면 `.mcp.json` 덕분에 서버가 자동으로 뜹니다. 설치도 첫 실행 때 스스로 하고, 세션의 네트워크 프록시도 자동으로 씁니다. 따로 실행할 명령은 없습니다.
 
-- 키는 채팅에 붙여넣지 않습니다. Client ID 처럼 비밀이 아닌 값은 환경 변수로, Client Secret 은 Claude 가 띄우는 보안 입력 폼(네트워크 시크릿)으로 넣습니다. 이때 `NAVER_SECRET_VIA_PROXY=1` 을 함께 두면 서버는 시크릿 없이 요청하고 프록시가 헤더를 채웁니다.
+- 키는 채팅에 붙여넣지 않습니다. API HUB 의 Client ID 처럼 비밀이 아닌 값은 `NAVER_HUB_KEY_ID` 로, Client Secret 은 Claude 가 띄우는 보안 입력 폼(네트워크 시크릿)으로 넣습니다. 이때 `NAVER_HUB_KEY_VIA_PROXY=1` 을 함께 두면 서버는 시크릿 없이 요청하고 프록시가 헤더를 채웁니다.
 - `naver_blog_draft` 는 클라우드에서 쓸 수 없습니다. 클라우드 컨테이너에는 직접 로그인할 화면이 없기 때문입니다. 블로그 글 입력은 내 PC 에서 실행할 때만 됩니다.
 
 ## 알아둘 점
 
+- **검색 API 약관 주의**: 2026년 9월 7일부터 검색 API 결과를 AI 에 입력하거나 답변 생성에 쓰는 것을 금지한다고 보도되었습니다. Claude 에서 검색 도구를 쓰는 것이 여기에 해당할 수 있으니, API HUB 약관을 직접 확인하고 판단하세요.
+- 쇼핑·책·전문자료 검색은 네이버가 2026년 7월 31일 종료해 지원하지 않습니다.
 - **플레이스 리뷰·내 매장 관리**(스마트플레이스)도 공식 API 가 없어 빠져 있습니다. 장소 검색은 `naver_search` 의 `type=local` 을 씁니다.
 - **스마트스토어 도구는 읽기 전용**입니다. 발주 확인·발송 처리·상품 수정 같은 쓰기 기능은 넣지 않았습니다.
 - 실제 키 없이 모의 응답으로만 테스트했습니다(`npm test`). 카페 글쓰기의 인코딩 방식과 커머스·지도 API 의 응답 형태는 실제 키로 한 번 확인이 필요합니다.

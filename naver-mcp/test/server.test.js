@@ -5,7 +5,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import * as naver from '../src/naver.js';
 
-const keys = { NAVER_CLIENT_ID: 'id', NAVER_CLIENT_SECRET: 'secret' };
+const keys = { NAVER_CLIENT_ID: 'id', NAVER_CLIENT_SECRET: 'secret', NAVER_HUB_KEY_ID: 'id', NAVER_HUB_KEY: 'key' };
 
 function mockFetch(t, handler) {
   const calls = [];
@@ -22,13 +22,13 @@ test('search: 헤더·쿼리 전송, 태그 제거, 지역 좌표 변환', async
     body: { total: 1, start: 1, items: [{ title: '<b>강남</b> 약국 &amp; 병원', mapx: '1270276000', mapy: '374979000' }] },
   }));
   const out = await naver.search(keys, { type: 'local', query: '강남 약국', display: 5 });
-  assert.match(calls[0].url, /\/v1\/search\/local\.json\?query=%EA%B0%95%EB%82%A8\+%EC%95%BD%EA%B5%AD&display=5&start=1$/);
-  assert.equal(calls[0].init.headers['X-Naver-Client-Id'], 'id');
+  assert.match(calls[0].url, /naverapihub\.apigw\.ntruss\.com\/search\/v1\/local\?query=%EA%B0%95%EB%82%A8\+%EC%95%BD%EA%B5%AD&display=5&start=1$/);
+  assert.equal(calls[0].init.headers['X-NCP-APIGW-API-KEY-ID'], 'id');
   assert.deepEqual(out.items[0], { title: '강남 약국 & 병원', mapx: '1270276000', mapy: '374979000', lng: 127.0276, lat: 37.4979 });
 });
 
 test('키가 없으면 설정 안내 오류', async () => {
-  await assert.rejects(() => naver.search({}, { type: 'news', query: 'x' }), /NAVER_CLIENT_ID, NAVER_CLIENT_SECRET/);
+  await assert.rejects(() => naver.search({}, { type: 'news', query: 'x' }), /NAVER_HUB_KEY_ID, NAVER_HUB_KEY/);
   await assert.rejects(() => naver.geocode({}, { address: 'x' }), /NCP_MAPS_KEY_ID/);
 });
 
@@ -96,7 +96,7 @@ test('MCP 서버: 도구 목록, 키 없는 호출, 카페 미리보기', async 
     ]);
     const noKey = await client.callTool({ name: 'naver_search', arguments: { type: 'news', query: '건강' } });
     assert.equal(noKey.isError, true);
-    assert.match(noKey.content[0].text, /NAVER_CLIENT_ID/);
+    assert.match(noKey.content[0].text, /NAVER_HUB_KEY_ID/);
 
     const preview = await client.callTool({ name: 'naver_cafe_post', arguments: { clubId: '1', menuId: '2', subject: 's', content: 'c' } });
     assert.equal(JSON.parse(preview.content[0].text).posted, false);
