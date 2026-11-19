@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "naver": {
+      "command": "node",
+      "args": ["naver-mcp/src/index.js"]
+    }
+  }
+}

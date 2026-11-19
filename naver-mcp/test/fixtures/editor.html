@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8">
+<iframe id="mainFrame" name="mainFrame" style="width:900px;height:600px" srcdoc='
+<button class="se-popup-button-cancel">취소</button>
+<button id="save">저장</button>
+<div class="se-title-text" contenteditable style="min-height:30px;border:1px solid"></div>
+<div class="se-component se-text"><div class="se-text-paragraph" contenteditable style="min-height:100px;border:1px solid"></div></div>
+<script>
+document.getElementById("save").addEventListener("click", function () {
+  window.saved = { t: document.querySelector(".se-title-text").innerText, b: document.querySelector(".se-text-paragraph").innerText };
+});
+</script>
+'></iframe>
