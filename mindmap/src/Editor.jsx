@@ -581,23 +581,23 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
   return (
     <div className="editor">
       <header className="topbar">
-        <button className="icon-btn" onClick={onBack} aria-label="정원으로"><ArrowLeft size={20} /></button>
+        <button className="icon-btn" onClick={onBack} aria-label="정원으로" data-tip="정원으로 돌아가기"><ArrowLeft size={20} /></button>
         {map.parent && mapTitles.has(map.parent.mapId) && (
-          <button className="parent-chip" onClick={() => jump(map.parent.mapId)} title="이 가지가 뻗어 나온 마인드맵으로">
+          <button className="parent-chip" onClick={() => jump(map.parent.mapId)} data-tip="이 가지가 뻗어 나온 원래 마인드맵으로 이동">
             <CornerLeftUp size={15} /><span>{mapTitles.get(map.parent.mapId)}</span>
           </button>
         )}
         <h1 className="map-title">{titleOf(map)}</h1>
         {total.total > 0 && (
-          <button className="progress-pill" onClick={() => setSheet(sheet === 'tasks' ? null : 'tasks')} title="할 일 목록">
+          <button className="progress-pill" onClick={() => setSheet(sheet === 'tasks' ? null : 'tasks')} data-tip="끝낸 할 일 / 전체 할 일 · 누르면 할 일 목록">
             <span className="bar"><i style={{ width: `${(total.done / total.total) * 100}%` }} /></span>
             {total.done}/{total.total}
           </button>
         )}
-        <button className="icon-btn" onClick={undo} disabled={!undoRef.current.length} aria-label="실행 취소"><Undo2 size={19} /></button>
-        <button className="icon-btn" onClick={redo} disabled={!redoRef.current.length} aria-label="다시 실행"><Redo2 size={19} /></button>
-        <button className={`icon-btn ${sheet === 'tasks' ? 'on' : ''}`} onClick={() => setSheet(sheet === 'tasks' ? null : 'tasks')} aria-label="할 일 목록"><ListTodo size={19} /></button>
-        <button className="icon-btn" onClick={() => setMenu(true)} aria-label="더 보기"><MoreVertical size={19} /></button>
+        <button className="icon-btn" onClick={undo} disabled={!undoRef.current.length} aria-label="실행 취소" data-tip="실행 취소 (Ctrl+Z)"><Undo2 size={19} /></button>
+        <button className="icon-btn" onClick={redo} disabled={!redoRef.current.length} aria-label="다시 실행" data-tip="다시 실행 (Ctrl+Shift+Z)"><Redo2 size={19} /></button>
+        <button className={`icon-btn ${sheet === 'tasks' ? 'on' : ''}`} onClick={() => setSheet(sheet === 'tasks' ? null : 'tasks')} aria-label="할 일 목록" data-tip="할 일 목록 보기: 상태별로 모아 보고 가지로 이동"><ListTodo size={19} /></button>
+        <button className="icon-btn" onClick={() => setMenu(true)} aria-label="더 보기" data-tip="더 보기: 펼침 방향, 모두 접기·펼치기, 식물로 보기, 구역 바꾸기, 내보내기"><MoreVertical size={19} /></button>
         {menu && (
           <Menu
             onClose={() => setMenu(false)}
@@ -656,9 +656,9 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
                     className={cls}
                     style={{ left: p.x, top: p.y, width: p.w, height: p.h, padding: `${s.pad.y}px ${s.pad.x}px`, '--c': p.color || 'var(--accent)' }}
                   >
-                    {n.status && <span className={`st ${n.status}`} data-st="1"><StatusIcon status={n.status} /></span>}
+                    {n.status && <span className={`st ${n.status}`} data-st="1" data-tip={`${STATUS_LABEL[n.status]} · 누르면 다음 상태로`}><StatusIcon status={n.status} /></span>}
                     {n.link && mapTitles.has(n.link) && (
-                      <span className="jump" data-jump={n.link} title="이 가지의 마인드맵 열기"><ArrowUpRight size={15} /></span>
+                      <span className="jump" data-jump={n.link} data-tip="이 가지를 심은 마인드맵으로 이동"><ArrowUpRight size={15} /></span>
                     )}
                     <div className="body">
                       {editing ? (
@@ -684,6 +684,7 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
                   {p.depth > 0 && n.children.length > 0 && (
                     <div
                       data-toggle={n.id}
+                      data-tip={n.collapsed ? `접힌 가지 ${n.children.length}개 펼치기` : '하위 가지 접기 (Space)'}
                       className={`toggle ${n.collapsed ? 'closed' : ''}`}
                       style={{ left: p.side > 0 ? p.x + p.w + 5 : p.x - 27, top: p.y + p.h / 2 - 11, '--c': p.color }}
                     >
@@ -697,18 +698,18 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
         </div>
 
         <div className="share">
-          <button className={sheet === 'send' ? 'on' : ''} onClick={() => setSheet(sheet === 'send' ? null : 'send')}>
+          <button className={sheet === 'send' ? 'on' : ''} onClick={() => setSheet(sheet === 'send' ? null : 'send')} data-tip="요약 복사: 보고서·앱 만들기 요청문·일정 안내를 만들어 복사">
             <Copy size={18} /><span>요약 복사</span>
           </button>
-          <button className={sheet === 'calendar' ? 'on' : ''} onClick={() => setSheet(sheet === 'calendar' ? null : 'calendar')}>
+          <button className={sheet === 'calendar' ? 'on' : ''} onClick={() => setSheet(sheet === 'calendar' ? null : 'calendar')} data-tip="캘린더에 추가: 날짜가 있는 가지를 Google 캘린더나 일정 파일로">
             <CalendarPlus size={18} /><span>캘린더</span>
           </button>
         </div>
 
         <div className="zoom">
-          <button onClick={() => zoomCenter(1.25)} aria-label="확대"><ZoomIn size={18} /></button>
-          <button onClick={() => zoomCenter(0.8)} aria-label="축소"><ZoomOut size={18} /></button>
-          <button onClick={() => fit()} aria-label="화면에 맞추기"><Maximize size={18} /></button>
+          <button onClick={() => zoomCenter(1.25)} aria-label="확대" data-tip="확대 (Ctrl+휠)"><ZoomIn size={18} /></button>
+          <button onClick={() => zoomCenter(0.8)} aria-label="축소" data-tip="축소 (Ctrl+휠)"><ZoomOut size={18} /></button>
+          <button onClick={() => fit()} aria-label="화면에 맞추기" data-tip="마인드맵 전체가 보이게 맞추기"><Maximize size={18} /></button>
         </div>
 
         {!selected && !sheet && (
@@ -723,20 +724,20 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
 
         {selected && (
           <div className="toolbar">
-            <button onClick={() => addNode(selectedId, false)}><CornerDownRight size={19} /><span>하위</span></button>
-            {selected.parent && <button onClick={() => addNode(selectedId, true)}><Plus size={19} /><span>형제</span></button>}
-            <button onClick={() => startEdit(selectedId)}><Pencil size={18} /><span>수정</span></button>
+            <button onClick={() => addNode(selectedId, false)} data-tip="하위 가지 추가 (Tab)"><CornerDownRight size={19} /><span>하위</span></button>
+            {selected.parent && <button onClick={() => addNode(selectedId, true)} data-tip="같은 단계에 가지 추가 (Enter)"><Plus size={19} /><span>형제</span></button>}
+            <button onClick={() => startEdit(selectedId)} data-tip="이름 수정 (F2 또는 두 번 누르기)"><Pencil size={18} /><span>수정</span></button>
             {selected.parent && (selected.node.link && mapTitles.has(selected.node.link) ? (
-              <button className="on" onClick={() => jump(selected.node.link)}><ArrowUpRight size={19} /><span>열기</span></button>
+              <button className="on" onClick={() => jump(selected.node.link)} data-tip="이 가지를 심은 마인드맵 열기"><ArrowUpRight size={19} /><span>열기</span></button>
             ) : (
-              <button onClick={() => plantBranch(selectedId)}><Sprout size={19} /><span>심기</span></button>
+              <button onClick={() => plantBranch(selectedId)} data-tip="이 가지를 새 마인드맵으로 심기: 하위 가지가 새 마인드맵으로 옮겨집니다"><Sprout size={19} /><span>심기</span></button>
             ))}
-            <button onClick={() => cycleStatus(selectedId)} className={selected.node.status ? `st ${selected.node.status}` : ''}>
+            <button onClick={() => cycleStatus(selectedId)} className={selected.node.status ? `st ${selected.node.status}` : ''} data-tip="상태 바꾸기: 없음 → 할 일 → 진행 중 → 완료">
               <StatusIcon status={selected.node.status} size={19} />
               <span>{selected.node.status ? STATUS_LABEL[selected.node.status] : '상태'}</span>
             </button>
-            <button onClick={() => { revealRef.current = selectedId; setSheet(sheet === 'detail' ? null : 'detail'); }} className={sheet === 'detail' ? 'on' : ''}><SlidersHorizontal size={18} /><span>상세</span></button>
-            {selected.parent && <button onClick={() => askRemove(selectedId)} className="danger"><Trash2 size={18} /><span>삭제</span></button>}
+            <button onClick={() => { revealRef.current = selectedId; setSheet(sheet === 'detail' ? null : 'detail'); }} className={sheet === 'detail' ? 'on' : ''} data-tip="상세: 상태, 마감일, 메모, 가지 색, 순서"><SlidersHorizontal size={18} /><span>상세</span></button>
+            {selected.parent && <button onClick={() => askRemove(selectedId)} className="danger" data-tip="삭제 (Delete): 하위 가지가 있으면 범위를 고릅니다"><Trash2 size={18} /><span>삭제</span></button>}
           </div>
         )}
 
