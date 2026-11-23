@@ -186,6 +186,10 @@ h1, h2, h3, p { margin: 0; }
   box-shadow: var(--shadow); pointer-events: none; overflow-wrap: anywhere; transition: opacity 0.12s;
 }
 
+.map-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; padding: 12px 2px; border-bottom: 1px solid var(--line); text-align: left; }
+.map-row:hover b { color: var(--accent); }
+.map-row b { font-size: 15px; overflow-wrap: anywhere; }
+.map-row small { flex: none; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .cleanup-list { margin: 0; padding: 10px 12px 10px 30px; border-radius: 10px; background: var(--bg); font-size: 14px; line-height: 1.7; }
 
 .backdrop { position: fixed; inset: 0; z-index: 30; }
