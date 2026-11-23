@@ -18,28 +18,6 @@ export const makeMap = (title = '새 프로젝트') => ({
   root: makeNode(title),
 });
 
-// 씨앗 종류: 정원에서 어떤 식물로 자랄지 정한다 (키는 예전 저장 데이터와 맞추기 위해 그대로 둔다)
-export const CATEGORIES = {
-  app: { label: '나무', plant: 'tree', plantName: '나무', desc: '가지는 가지로, 맨 끝 항목은 잎으로 자라요.' },
-  business: { label: '열매 나무', plant: 'fruit', plantName: '열매 나무', desc: '나무처럼 자라고, 끝낸 일마다 열매가 달려요.' },
-  personal: { label: '꽃', plant: 'flower', plantName: '꽃', desc: '가지 하나가 꽃잎 하나가 돼요.' },
-  free: { label: '덤불', plant: 'bush', plantName: '덤불', desc: '가지 하나가 덩이 하나, 끝낸 일은 열매가 돼요.' },
-};
-/** 받침 유무에 맞는 조사를 붙인다: josa('꽃', '을', '를') → '꽃을' */
-export const josa = (word, withFinal, without) => {
-  const code = word.charCodeAt(word.length - 1) - 0xac00;
-  return word + (code >= 0 && code <= 11171 && code % 28 !== 0 ? withFinal : without);
-};
-export const CATEGORY_KEYS = Object.keys(CATEGORIES);
-export const categoryOf = (map) => (CATEGORIES[map.category] ? map.category : 'free');
-
-/** 고른 씨앗으로 심을 빈 마인드맵 */
-export function newMapIn(category) {
-  const map = makeMap();
-  map.category = category;
-  return map;
-}
-
 export const titleOf = (map) => (map.root.text || '').trim().split('\n')[0] || '제목 없음';
 
 export function find(root, id) {
@@ -140,7 +118,6 @@ function cleanMap(raw) {
     layout: raw.layout === 'right' ? 'right' : 'both',
     createdAt: Number(raw.createdAt) || Date.now(),
     updatedAt: Number(raw.updatedAt) || Date.now(),
-    ...(CATEGORIES[raw.category] ? { category: raw.category } : {}),
     ...(Number(raw.completedAt) > 0 ? { completedAt: Number(raw.completedAt) } : {}),
     ...(typeof raw.parent?.mapId === 'string' ? { parent: { mapId: raw.parent.mapId } } : {}),
     oldId: typeof raw.id === 'string' ? raw.id : null,
@@ -187,49 +164,47 @@ export function download(filename, text, mime = 'application/json') {
 }
 
 // ── 저장 ─────────────────────────────────────────────────
-function sampleMap() {
-  const day = (offset) => {
-    const d = new Date(Date.now() + offset * 86400000);
-    const p = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-  };
-  const n = (text, extra, children = []) => ({ ...makeNode(text, extra), children });
-  const map = makeMap('웹사이트 리뉴얼');
-  map.category = 'business';
-  // 예시는 기기마다 따로 만들어지므로, 동기화할 때 하나로 합쳐지도록 같은 id와 가장 오래된 수정 시각을 준다
-  map.id = 'sample-website';
+/**
+ * 마인드맵마다 캔버스 위 자리(root.pos)가 있어야 한다. 자리가 없는 것(이전 버전에서 만든 것,
+ * 다른 기기에서 넘어온 것)은 이미 있는 마인드맵들의 오른쪽에 나란히 놓는다. 바꿀 것이 없으면 같은 배열을 돌려준다.
+ */
+export function withPositions(maps) {
+  if (maps.every((m) => m.root.pos)) return maps;
+  let x = maps.reduce((mx, m) => (m.root.pos ? Math.max(mx, m.root.pos.x + 1100) : mx), 0);
+  return maps.map((m) => {
+    if (m.root.pos) return m;
+    const placed = { ...m, root: { ...m.root, pos: { x, y: 0 } } };
+    x += 1100;
+    return placed;
+  });
+}
+
+/** 처음 여는 기기의 빈 작업공간. 동기화로 다른 기기의 내용이 들어오면 손대지 않은 이 빈 마인드맵은 자리를 비켜 준다 */
+function firstMap() {
+  const map = makeMap('새 프로젝트');
+  map.id = 'first';
   map.updatedAt = 1;
-  map.root.children = [
-    n('기획', {}, [
-      n('목표 정리', { status: 'done' }),
-      n('경쟁 사이트 조사', { status: 'done', note: '3곳 비교: 메뉴 구조, 첫 화면, 문의 동선' }),
-      n('사이트맵 확정', { status: 'doing', due: day(2) }),
-    ]),
-    n('디자인', {}, [
-      n('무드보드', { status: 'done' }),
-      n('메인 시안', { status: 'doing', due: day(5) }),
-      n('모바일 시안', { status: 'todo' }),
-    ]),
-    n('개발', {}, [
-      n('프론트엔드', {}, [n('메인 페이지', { status: 'todo' }), n('문의 폼', { status: 'todo' })]),
-      n('콘텐츠 이전', { status: 'todo' }),
-    ]),
-    n('출시', {}, [n('최종 점검', { status: 'todo', due: day(14) }), n('공지 올리기', { status: 'todo' })]),
-  ];
+  map.root.pos = { x: 0, y: 0 };
   return map;
 }
+export const isUntouchedFirst = (m) => m.id === 'first' && m.updatedAt === 1 && !m.root.children.length;
 
 export function loadMaps() {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const data = JSON.parse(raw);
-      if (Array.isArray(data?.maps)) return data.maps.filter((m) => m?.id && m?.root?.children);
+      if (Array.isArray(data?.maps)) {
+        const maps = data.maps.filter((m) => m?.id && m?.root?.children);
+        // '새 프로젝트'가 캔버스의 기준 자리(0,0)에 오도록 맨 앞에 둔다
+        maps.sort((a, b) => (titleOf(b) === '새 프로젝트') - (titleOf(a) === '새 프로젝트'));
+        return withPositions(maps);
+      }
     }
   } catch {
     /* 손상된 데이터는 무시하고 새로 시작 */
   }
-  return [sampleMap()];
+  return [firstMap()];
 }
 
 export function saveMaps(maps) {

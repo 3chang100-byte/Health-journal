@@ -185,6 +185,8 @@ h1, h2, h3, p { margin: 0; }
   box-shadow: var(--shadow); pointer-events: none; overflow-wrap: anywhere; transition: opacity 0.12s;
 }
 
+.cleanup-list { margin: 0; padding: 10px 12px 10px 30px; border-radius: 10px; background: var(--bg); font-size: 14px; line-height: 1.7; }
+
 .backdrop { position: fixed; inset: 0; z-index: 30; }
 .menu {
   position: absolute; z-index: 31; top: calc(100% - 4px); right: 8px; min-width: 190px;
@@ -222,6 +224,7 @@ h1, h2, h3, p { margin: 0; }
 .canvas.dragging { cursor: grabbing; }
 .world { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
 .world.anim { transition: transform 0.25s ease; }
+.world.moving .node, .world.moving .toggle { transition: none; }
 .edges { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
 .edges path { fill: none; stroke-linecap: round; }
 
@@ -237,7 +240,8 @@ h1, h2, h3, p { margin: 0; }
   position: absolute; display: flex; align-items: flex-start;
   border: 2px solid var(--c); border-radius: 10px;
   background: var(--surface); color: var(--ink); cursor: pointer;
-  transition: left 0.18s ease, top 0.18s ease, box-shadow 0.12s;
+  transition: left 0.18s ease, top 0.18s ease, box-shadow 0.12s, transform 0.18s ease;
+  transform-origin: center;
 }
 .node.d0 { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); border-radius: 16px; }
 .node.d1 { background: color-mix(in srgb, var(--c) 13%, var(--surface)); border-radius: 12px; }

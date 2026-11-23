@@ -1,5 +1,6 @@
 // 기기 간 동기화: 사용자의 GitHub 비밀 Gist 하나에 마인드맵 전체를 저장한다
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { isUntouchedFirst } from './store.js';
 
 const SETTINGS_KEY = 'project-mindmap.sync';
 const DELETED_KEY = 'project-mindmap.deleted';
@@ -41,8 +42,10 @@ export function merge(localMaps, localDeleted, remote) {
   const cutoff = Date.now() - KEEP_DELETED_MS;
   for (const id of Object.keys(deleted)) if (deleted[id] < cutoff) delete deleted[id];
 
+  // 다른 기기의 내용이 있으면, 이 기기에서 손대지 않은 빈 시작 마인드맵은 합치지 않는다
+  const mine = remote?.maps?.length ? localMaps.filter((m) => !isUntouchedFirst(m)) : localMaps;
   const byId = new Map();
-  for (const m of [...(remote?.maps || []), ...localMaps]) {
+  for (const m of [...(remote?.maps || []), ...mine]) {
     if (!m || !m.id || !m.root) continue;
     const cur = byId.get(m.id);
     if (!cur || (m.updatedAt || 0) > (cur.updatedAt || 0)) byId.set(m.id, m);
