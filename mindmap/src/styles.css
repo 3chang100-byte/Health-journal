@@ -295,6 +295,8 @@ h1, h2, h3, p { margin: 0; }
 .share button + button { border-top: 1px solid var(--line); }
 .share button:hover { background: var(--surface-2); }
 .share button.on { color: var(--accent); background: var(--surface-2); }
+.share button.done { color: var(--surface); background: var(--done); font-weight: 600; }
+.share button.done:hover { background: var(--done); }
 
 .hint {
   position: absolute; left: 50%; bottom: calc(22px + var(--sb)); transform: translateX(-50%);

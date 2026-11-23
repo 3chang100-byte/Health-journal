@@ -697,6 +697,9 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
         </div>
 
         <div className="share">
+          <button className={map.completedAt ? 'done' : ''} onClick={onToggleDone} aria-pressed={!!map.completedAt} title={map.completedAt ? '완료를 취소합니다' : '이 마인드맵을 완료로 표시합니다'}>
+            <CheckCircle2 size={18} /><span>{map.completedAt ? '완료됨' : '완료'}</span>
+          </button>
           <button className={sheet === 'send' ? 'on' : ''} onClick={() => setSheet(sheet === 'send' ? null : 'send')}>
             <Copy size={18} /><span>요약 복사</span>
           </button>
