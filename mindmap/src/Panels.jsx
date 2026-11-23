@@ -125,9 +125,10 @@ export function TasksSheet({ root, onCycle, onFocus, onClose }) {
               <button className={`st ${k}`} onClick={() => onCycle(n.id)} aria-label="상태 바꾸기"><StatusIcon status={k} size={20} /></button>
               <button className="task-main" onClick={() => onFocus(n.id)}>
                 <span className="task-text">{n.text}</span>
-                {(p || n.due) && (
+                {(p || n.due || n.doneBy) && (
                   <span className="task-sub">
                     {n.due && <b className={n.due < today && k !== 'done' ? 'overdue' : ''}>◷ {fmtDue(n.due)}</b>}
+                    {n.doneBy && <b>상위 가지 완료</b>}
                     {p}
                   </span>
                 )}

@@ -85,7 +85,7 @@ h1, h2, h3, p { margin: 0; }
 .home-head { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
 .home-head h1 { font-size: 28px; letter-spacing: -0.02em; }
 .home-head p { color: var(--muted); margin-top: 4px; font-size: 14px; }
-.home-actions { display: flex; gap: 8px; }
+.home-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
 .card {
   position: relative; min-height: 124px;
@@ -125,13 +125,15 @@ h1, h2, h3, p { margin: 0; }
 .zone h2 { font-size: 15px; }
 .zone header span { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .zone svg { display: block; width: 100%; height: auto; }
-.zone-empty { font-size: 10.5px; fill: var(--muted); }
+.garden { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); overflow: hidden; }
+.garden svg { display: block; }
+.zone-empty { font-size: 13px; fill: var(--muted); }
 .zone-more { padding: 0 14px 10px; color: var(--muted); font-size: 12.5px; }
 .plant { cursor: pointer; outline: none; }
-.plant-name { font-size: 9.5px; fill: var(--ink); font-weight: 600; }
+.plant-name { font-size: 11.5px; fill: var(--ink); font-weight: 600; }
 .plant:hover .plant-name, .plant:focus-visible .plant-name { fill: var(--accent); text-decoration: underline; }
 .plant:focus-visible rect { stroke: var(--accent); stroke-width: 1.5; rx: 8; }
-.plant-pct { font-size: 8px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.plant-pct { font-size: 10px; fill: var(--muted); font-variant-numeric: tabular-nums; }
 .plant-new { display: inline-flex; align-items: center; gap: 6px; background: var(--leaf); color: var(--surface); }
 /* 정원사 애니메이션 */
 .g-walk { animation: g-stroll var(--dur) linear var(--delay) infinite; }
