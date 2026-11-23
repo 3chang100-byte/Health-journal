@@ -3,7 +3,7 @@ import {
   ArrowLeft, Undo2, Redo2, ListTodo, MoreVertical, Plus, Trash2, Pencil, Circle, CircleDot,
   CheckCircle2, ZoomIn, ZoomOut, Maximize, CornerDownRight, SlidersHorizontal, Copy, CalendarPlus, Sprout, ArrowUpRight, CornerLeftUp,
 } from 'lucide-react';
-import { CATEGORIES, STATUSES, STATUS_LABEL, categoryOf, find, makeNode, newMapIn, stats, titleOf, walk } from './store.js';
+import { CATEGORIES, STATUSES, STATUS_LABEL, applyPatch, categoryOf, find, makeNode, newMapIn, stats, titleOf, walk } from './store.js';
 import { buildSizes, computeLayout, edgePath } from './layout.js';
 import { DetailSheet, TasksSheet, Menu } from './Panels.jsx';
 import { CopySheet, CalendarSheet } from './SharePanels.jsx';
@@ -276,10 +276,7 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
     mutate((r) => {
       const n = find(r, id)?.node;
       if (!n) return false;
-      for (const [k, v] of Object.entries(patch)) {
-        if (v === null || v === '' || v === undefined) delete n[k];
-        else n[k] = v;
-      }
+      applyPatch(n, patch);
     });
 
   const cycleStatus = (id) => {

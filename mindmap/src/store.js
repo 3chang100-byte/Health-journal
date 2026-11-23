@@ -57,6 +57,19 @@ export function walk(node, fn, parent = null, depth = 0) {
   for (const c of node.children) walk(c, fn, node, depth + 1);
 }
 
+/** 가지의 값을 바꾼다. 완료로 바꾸면 그 아래 가지도 모두 완료가 된다. */
+export function applyPatch(node, patch) {
+  for (const [k, v] of Object.entries(patch)) {
+    if (v === null || v === '' || v === undefined) delete node[k];
+    else node[k] = v;
+  }
+  if (patch.status === 'done') {
+    walk(node, (n) => {
+      n.status = 'done';
+    });
+  }
+}
+
 export function stats(root) {
   const s = { nodes: 0, total: 0, done: 0, doing: 0, todo: 0 };
   walk(root, (n) => {
