@@ -140,7 +140,9 @@ export default function Editor({ maps, onChange, menuItems = [] }) {
   useLayoutEffect(() => {
     try {
       const v = JSON.parse(localStorage.getItem(VIEW_KEY));
-      if (v && [v.x, v.y, v.k].every(Number.isFinite) && v.k >= MIN_K && v.k <= MAX_K) return applyView(v);
+      const el = canvasRef.current;
+      const seen = v && [...layoutRef.current.pos.values()].some((p) => (p.x + p.w) * v.k + v.x > 0 && p.x * v.k + v.x < el.clientWidth && (p.y + p.h) * v.k + v.y > 0 && p.y * v.k + v.y < el.clientHeight);
+      if (seen && [v.x, v.y, v.k].every(Number.isFinite) && v.k >= MIN_K && v.k <= MAX_K) return applyView(v);
     } catch {
       /* 저장된 화면이 없으면 맞춰서 연다 */
     }
@@ -693,6 +695,14 @@ export default function Editor({ maps, onChange, menuItems = [] }) {
   // 축소해도 제목이 읽히도록 남은 가지를 키운다
   const boost = (depth) => (lod === 0 ? 1 : depth === 0 ? clamp(0.85 / view.k, 1, lod === 2 ? 6 : 1.5) : Math.min(1.35, 0.7 / view.k));
   const topSelected = !!selected && selected.parent?.id === FOREST;
+  // 화면 안에 보이는 가지가 하나도 없으면(멀리 옮겨 갔거나 잘못 확대했을 때) 돌아오는 길을 보여 준다
+  const lost = (() => {
+    const el = canvasRef.current;
+    if (!el || !nodes.length) return false;
+    const w = el.clientWidth;
+    const h = el.clientHeight;
+    return !nodes.some((p) => (p.x + p.w) * view.k + view.x > 0 && p.x * view.k + view.x < w && (p.y + p.h) * view.k + view.y > 0 && p.y * view.k + view.y < h);
+  })();
   const setLayoutMode = (mode) => {
     const now = Date.now();
     const next = mapsRef.current.map((m) => ({ ...m, layout: mode, updatedAt: now }));
@@ -850,7 +860,10 @@ export default function Editor({ maps, onChange, menuItems = [] }) {
           <button onClick={() => fit()} aria-label="화면에 맞추기" data-tip="심은 마인드맵 전체가 보이게 맞추기"><Maximize size={18} /></button>
         </div>
 
-        {!selected && !sheet && (
+        {lost && !sheet && (
+          <button className="hint lost" onClick={() => fit()}>화면에 마인드맵이 없어요 · 눌러서 전체 보기</button>
+        )}
+        {!lost && !selected && !sheet && (
           <div className="hint">
             {!root.children.length ? '빈 곳을 두 번 누르거나 ‘새 씨앗’을 눌러 첫 마인드맵을 심어 보세요'
               : lod === 2 ? '제목만 보는 중 · 제목을 두 번 누르면 그 마인드맵으로 확대'
