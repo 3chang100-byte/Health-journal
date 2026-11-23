@@ -177,6 +177,7 @@ h1, h2, h3, p { margin: 0; }
 .templates button:hover { border-color: var(--accent); }
 .templates strong { font-size: 15px; }
 .templates small { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.hint.lost { pointer-events: auto; cursor: pointer; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .hint.plant-cta { pointer-events: auto; cursor: pointer; background: var(--leaf); border-color: var(--leaf); color: var(--surface); font-weight: 600; }
 
 .tooltip {
