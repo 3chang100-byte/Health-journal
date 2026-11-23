@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { STATUSES, STATUS_LABEL, find, makeNode, resolved, stats, uid, walk } from './store.js';
 import { buildSizes, computeLayout, edgePath } from './layout.js';
-import { DetailSheet, TasksSheet, Menu } from './Panels.jsx';
+import { DetailSheet, TasksSheet, Menu, Sheet } from './Panels.jsx';
 import { CopySheet, CalendarSheet } from './SharePanels.jsx';
 import { countNodes } from './share.js';
 
@@ -753,6 +753,7 @@ export default function Editor({ maps, onChange, menuItems = [] }) {
               { label: layoutMode === 'right' ? '양쪽으로 펼치기' : '오른쪽으로만 펼치기', run: () => setLayoutMode(layoutMode === 'right' ? 'both' : 'right') },
               { label: '모두 펼치기', run: () => setAllCollapsed(false) },
               { label: '모두 접기', run: () => setAllCollapsed(true) },
+              { label: `마인드맵 찾기 (${root.children.length}개)`, run: () => setSheet('maps') },
               { label: '전체가 보이게 맞추기', run: () => fit() },
               ...menuItems,
             ]}
@@ -924,6 +925,18 @@ export default function Editor({ maps, onChange, menuItems = [] }) {
             onReorder={(dir) => reorder(selectedId, dir)}
             onClose={() => setSheet(null)}
           />
+        )}
+        {sheet === 'maps' && (
+          <Sheet title="마인드맵 찾기" onClose={() => setSheet(null)}>
+            {!root.children.length && <p className="empty-note">이 기기에 저장된 마인드맵이 없어요.</p>}
+            {root.children.map((r) => (
+              <button key={r.id} className="map-row" onClick={() => { jump(r.id); if (canvasRef.current.clientWidth < 760) setSheet(null); }}>
+                <b>{r.text.split('\n')[0] || '제목 없음'}</b>
+                <small>가지 {countNodes(r) - 1}개</small>
+              </button>
+            ))}
+            <p className="fine">이 기기의 이 브라우저에 저장된 마인드맵입니다. 누르면 그 마인드맵이 있는 자리로 이동합니다.</p>
+          </Sheet>
         )}
         {sheet === 'tasks' && (
           <TasksSheet root={shownRoot} onCycle={cycleStatus} onFocus={focusNode} onClose={() => setSheet(null)} />
