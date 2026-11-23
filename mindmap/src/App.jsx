@@ -201,19 +201,20 @@ export default function App() {
           <p>마인드맵을 시작하면 정원에 심기고, 일을 해낼수록 자라요.</p>
         </div>
         <div className="home-actions">
-          <button className="solid-btn plant-new" onClick={() => setPicker('new')}><Sprout size={17} /> 새로 심기</button>
-          <button className="ghost-btn" onClick={() => setImporting(true)}><Mic size={16} /> 녹음으로 심기</button>
+          <button className="solid-btn plant-new" onClick={() => setPicker('new')} data-tip="새 마인드맵을 만들어 정원에 심기"><Sprout size={17} /> 새로 심기</button>
+          <button className="ghost-btn" onClick={() => setImporting(true)} data-tip="녹음 대본·요약으로 마인드맵 만들기"><Mic size={16} /> 녹음으로 심기</button>
           {canSync && (
-            <button className={`ghost-btn sync-btn ${sync.status}`} onClick={() => setSyncOpen(true)}>
+            <button className={`ghost-btn sync-btn ${sync.status}`} onClick={() => setSyncOpen(true)} data-tip="여러 기기에서 같은 마인드맵 보기 (GitHub 계정에 저장)">
               {sync.status === 'off' ? <CloudOff size={16} /> : sync.status === 'error' ? <AlertTriangle size={16} /> : <Cloud size={16} />}
               {sync.status === 'off' ? '동기화 켜기' : sync.status === 'syncing' ? '동기화 중…' : sync.status === 'error' ? '동기화 확인 필요' : '동기화됨'}
             </button>
           )}
-          <button className="ghost-btn" onClick={() => fileRef.current.click()}><Upload size={16} /> 가져오기</button>
+          <button className="ghost-btn" onClick={() => fileRef.current.click()} data-tip="백업 파일(JSON)에서 마인드맵 불러오기"><Upload size={16} /> 가져오기</button>
           <button
             className="ghost-btn"
             disabled={!maps.length}
             onClick={() => exportMaps(`mindmap-backup-${new Date().toISOString().slice(0, 10)}.json`, maps)}
+            data-tip="모든 마인드맵을 파일 하나로 내려받기"
           >
             <Download size={16} /> 전체 백업
           </button>
@@ -222,8 +223,8 @@ export default function App() {
       </header>
 
       <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'garden'} className={tab === 'garden' ? 'on' : ''} onClick={() => { location.hash = ''; }}>정원</button>
-        <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => { location.hash = '#list'; }}>목록 {maps.length}</button>
+        <button role="tab" aria-selected={tab === 'garden'} className={tab === 'garden' ? 'on' : ''} onClick={() => { location.hash = ''; }} data-tip="정원: 마인드맵이 식물로 자라는 모습">정원</button>
+        <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => { location.hash = '#list'; }} data-tip="목록: 마인드맵을 카드로 보고 복제·삭제">목록 {maps.length}</button>
       </div>
 
       {tab === 'garden' && <Park maps={maps} onPick={open} onNew={() => setPicker('new')} />}
@@ -261,7 +262,7 @@ export default function App() {
                   <span className="card-progress muted">할 일 없음</span>
                 )}
               </button>
-              <button className="icon-btn card-more" onClick={() => setMenuFor(m.id)} aria-label="더 보기"><MoreVertical size={18} /></button>
+              <button className="icon-btn card-more" onClick={() => setMenuFor(m.id)} aria-label="더 보기" data-tip="더 보기: 완료, 복제, 내보내기, 삭제"><MoreVertical size={18} /></button>
               {menuFor === m.id && (
                 <Menu
                   onClose={() => setMenuFor(null)}
