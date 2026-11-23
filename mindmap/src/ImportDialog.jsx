@@ -153,9 +153,9 @@ export default function ImportDialog({ onCreate, onClose }) {
         )}
 
         <div className="import-opts">
-          <label htmlFor="import-cat">심을 구역</label>
+          <label htmlFor="import-cat">심을 씨앗</label>
           <select id="import-cat" value={category} onChange={(e) => setCategory(e.target.value)}>
-            {CATEGORY_KEYS.map((k) => <option key={k} value={k}>{CATEGORIES[k].zone} · {CATEGORIES[k].plantName}</option>)}
+            {CATEGORY_KEYS.map((k) => <option key={k} value={k}>{CATEGORIES[k].plantName}</option>)}
           </select>
         </div>
         {host.ai ? (

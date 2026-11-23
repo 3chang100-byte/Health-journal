@@ -1,5 +1,5 @@
 // 마인드맵 → 식물 도형. 밑동이 (0,0), 위쪽이 -y 인 좌표로 그린다.
-import { CATEGORIES, PALETTE, categoryOf, stats, walk } from './store.js';
+import { CATEGORIES, PALETTE, categoryOf, resolved, stats, walk } from './store.js';
 
 // 같은 프로젝트는 언제나 같은 모양이 되도록 id로 난수를 만든다
 const rnd = (str, salt = 0) => {
@@ -46,7 +46,7 @@ function treeGeo(map, { detail, fruit }) {
   // 잎은 가지 끝에서 가지가 뻗은 방향으로 난다. 색으로 진행 상태를 나타낸다.
   const leaf = (x, y, ang, len, fill) =>
     geo.blobs.push({ leaf: true, x, y, rx: len, ry: len * 0.36, rot: -ang, fill });
-  const tone = (n) => (done || n.status === 'done' ? 'var(--leaf)' : n.status === 'doing' ? 'var(--leaf-2)' : 'var(--leaf-pale)');
+  const tone = (n) => (done || (n.status === 'done' || n.doneBy) ? 'var(--leaf)' : n.status === 'doing' ? 'var(--leaf-2)' : 'var(--leaf-pale)');
 
   const rec = (n, x, y, ang, len, w, depth) => {
     const x2 = x + Math.cos(rad(ang)) * len;
@@ -62,7 +62,7 @@ function treeGeo(map, { detail, fruit }) {
         leaf(x2, y2, ang + 42 + rnd(n.id, 1) * 14, L * 0.78, 'var(--leaf-2)');
         leaf(x2, y2, ang - 42 - rnd(n.id, 2) * 14, L * 0.78, 'var(--leaf-2)');
       }
-      if (fruit && n.status === 'done') {
+      if (fruit && (n.status === 'done' || n.doneBy)) {
         geo.blobs.push({ x: x2 + 1.5, y: y2 + L * 0.34, rx: L * 0.24, ry: L * 0.24, fill: 'var(--fruit)', top: true });
       }
     } else if (done && depth > 0) {
@@ -184,6 +184,8 @@ function bushGeo(map, { detail }) {
 }
 
 export function plantGeo(map, detail = false) {
+  // 완료한 가지 아래는 모두 완료로 보고 그린다
+  map = { ...map, root: resolved(map.root) };
   const kind = CATEGORIES[categoryOf(map)].plant;
   if (kind === 'flower') return flowerGeo(map, { detail });
   if (kind === 'bush') return bushGeo(map, { detail });

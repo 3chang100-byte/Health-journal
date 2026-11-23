@@ -18,12 +18,12 @@ export const makeMap = (title = '새 프로젝트') => ({
   root: makeNode(title),
 });
 
-// 프로젝트 주제 = 정원 구역 = 식물 종류
+// 씨앗 종류: 정원에서 어떤 식물로 자랄지 정한다 (키는 예전 저장 데이터와 맞추기 위해 그대로 둔다)
 export const CATEGORIES = {
-  app: { label: '앱 만들기', zone: '앱 만들기', plant: 'tree', plantName: '나무', desc: '만들고 싶은 앱이나 서비스. 나무로 자라요.' },
-  business: { label: '사업 확장', zone: '사업 확장', plant: 'fruit', plantName: '열매 나무', desc: '사업과 일에 관한 프로젝트. 열매 나무로 자라요.' },
-  personal: { label: '개인 정원', zone: '개인 정원', plant: 'flower', plantName: '꽃', desc: '개인적으로 하고 싶은 일. 꽃으로 자라요.' },
-  free: { label: '기타', zone: '기타', plant: 'bush', plantName: '덤불', desc: '그 밖의 모든 것. 덤불로 자라요.' },
+  app: { label: '나무', plant: 'tree', plantName: '나무', desc: '가지는 가지로, 맨 끝 항목은 잎으로 자라요.' },
+  business: { label: '열매 나무', plant: 'fruit', plantName: '열매 나무', desc: '나무처럼 자라고, 끝낸 일마다 열매가 달려요.' },
+  personal: { label: '꽃', plant: 'flower', plantName: '꽃', desc: '가지 하나가 꽃잎 하나가 돼요.' },
+  free: { label: '덤불', plant: 'bush', plantName: '덤불', desc: '가지 하나가 덩이 하나, 끝낸 일은 열매가 돼요.' },
 };
 /** 받침 유무에 맞는 조사를 붙인다: josa('꽃', '을', '를') → '꽃을' */
 export const josa = (word, withFinal, without) => {
@@ -33,7 +33,7 @@ export const josa = (word, withFinal, without) => {
 export const CATEGORY_KEYS = Object.keys(CATEGORIES);
 export const categoryOf = (map) => (CATEGORIES[map.category] ? map.category : 'free');
 
-/** 고른 구역에 심을 빈 마인드맵 */
+/** 고른 씨앗으로 심을 빈 마인드맵 */
 export function newMapIn(category) {
   const map = makeMap();
   map.category = category;
@@ -57,15 +57,43 @@ export function walk(node, fn, parent = null, depth = 0) {
   for (const c of node.children) walk(c, fn, node, depth + 1);
 }
 
+const resolvedCache = new WeakMap();
+/**
+ * 화면에 보여 줄 때 쓰는 사본: 완료한 가지 아래의 가지는 모두 완료로 처리한다.
+ * 상위가 완료라서 완료가 된 가지에는 doneBy 표시가 붙는다. 저장되는 원본은 바꾸지 않는다.
+ */
+export function resolved(root) {
+  const hit = resolvedCache.get(root);
+  if (hit) return hit;
+  const rec = (n, inherited) => {
+    const copy = { ...n };
+    if (inherited) {
+      copy.doneBy = true;
+      if (n.status) copy.status = 'done';
+    }
+    const pass = inherited || n.status === 'done';
+    copy.children = n.children.map((c) => rec(c, pass));
+    return copy;
+  };
+  const out = rec(root, false);
+  resolvedCache.set(root, out);
+  resolvedCache.set(out, out);
+  return out;
+}
+
+/** 가지 수와 할 일 진행. 완료한 가지 아래의 할 일은 완료로 센다 */
 export function stats(root) {
   const s = { nodes: 0, total: 0, done: 0, doing: 0, todo: 0 };
-  walk(root, (n) => {
+  const rec = (n, inherited) => {
     s.nodes++;
     if (n.status) {
       s.total++;
-      s[n.status]++;
+      s[inherited ? 'done' : n.status]++;
     }
-  });
+    const pass = inherited || n.status === 'done';
+    for (const c of n.children) rec(c, pass);
+  };
+  rec(root, false);
   return s;
 }
 

@@ -3,7 +3,7 @@ import {
   ArrowLeft, Undo2, Redo2, ListTodo, MoreVertical, Plus, Trash2, Pencil, Circle, CircleDot,
   CheckCircle2, ZoomIn, ZoomOut, Maximize, CornerDownRight, SlidersHorizontal, Copy, CalendarPlus, Sprout, ArrowUpRight, CornerLeftUp,
 } from 'lucide-react';
-import { CATEGORIES, STATUSES, STATUS_LABEL, categoryOf, find, makeNode, newMapIn, stats, titleOf, walk } from './store.js';
+import { CATEGORIES, STATUSES, STATUS_LABEL, categoryOf, find, makeNode, newMapIn, resolved, stats, titleOf, walk } from './store.js';
 import { buildSizes, computeLayout, edgePath } from './layout.js';
 import { DetailSheet, TasksSheet, Menu } from './Panels.jsx';
 import { CopySheet, CalendarSheet } from './SharePanels.jsx';
@@ -42,13 +42,16 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
 
   const root = map.root;
   // mapTitles: 지금 있는 마인드맵 id → 제목. 지워진 마인드맵으로 가는 연결은 표시하지 않는다
-  const sizes = useMemo(() => buildSizes(root, editingId, mapTitles), [root, editingId, mapTitles]);
+  // shownRoot: 완료한 가지 아래를 모두 완료로 처리한 보기용 사본. 고칠 때는 항상 원본(root)을 쓴다
+  const shownRoot = useMemo(() => resolved(root), [root]);
+  const sizes = useMemo(() => buildSizes(shownRoot, editingId, mapTitles), [shownRoot, editingId, mapTitles]);
   const jump = (mapId) => { finishEdit(); location.hash = `#m-${mapId}`; };
-  const layout = useMemo(() => computeLayout(root, map.layout, sizes), [root, map.layout, sizes]);
+  const layout = useMemo(() => computeLayout(shownRoot, map.layout, sizes), [shownRoot, map.layout, sizes]);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
   const total = useMemo(() => stats(root), [root]);
   const selected = selectedId ? find(root, selectedId) : null;
+  const shown = selectedId ? find(shownRoot, selectedId)?.node : null; // 선택한 가지의 보기용 상태
 
   // ── 뷰 ───────────────────────────────────────────────
   const applyView = (v, animate = false) => {
@@ -597,7 +600,7 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
         <button className="icon-btn" onClick={undo} disabled={!undoRef.current.length} aria-label="실행 취소" data-tip="실행 취소 (Ctrl+Z)"><Undo2 size={19} /></button>
         <button className="icon-btn" onClick={redo} disabled={!redoRef.current.length} aria-label="다시 실행" data-tip="다시 실행 (Ctrl+Shift+Z)"><Redo2 size={19} /></button>
         <button className={`icon-btn ${sheet === 'tasks' ? 'on' : ''}`} onClick={() => setSheet(sheet === 'tasks' ? null : 'tasks')} aria-label="할 일 목록" data-tip="할 일 목록 보기: 상태별로 모아 보고 가지로 이동"><ListTodo size={19} /></button>
-        <button className="icon-btn" onClick={() => setMenu(true)} aria-label="더 보기" data-tip="더 보기: 펼침 방향, 모두 접기·펼치기, 식물로 보기, 구역 바꾸기, 내보내기"><MoreVertical size={19} /></button>
+        <button className="icon-btn" onClick={() => setMenu(true)} aria-label="더 보기" data-tip="더 보기: 펼침 방향, 모두 접기·펼치기, 식물로 보기, 씨앗 바꾸기, 내보내기"><MoreVertical size={19} /></button>
         {menu && (
           <Menu
             onClose={() => setMenu(false)}
@@ -608,7 +611,7 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
               { label: '화면에 맞추기', run: () => fit() },
               { label: `${CATEGORIES[categoryOf(map)].plantName}로 보기`, run: onShowPlant },
               { label: map.completedAt ? '완료 취소' : '프로젝트 완료', run: onToggleDone },
-              { label: `구역 바꾸기 (지금: ${CATEGORIES[categoryOf(map)].zone})`, run: onPickCategory },
+              { label: `씨앗 바꾸기 (지금: ${CATEGORIES[categoryOf(map)].plantName})`, run: onPickCategory },
               { label: '이 마인드맵 내보내기 (JSON)', run: onExport },
             ]}
           />
@@ -645,7 +648,7 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
               const cls = [
                 'node', `d${s.level}`,
                 n.id === selectedId && 'sel',
-                n.status === 'done' && 'done',
+                (n.status === 'done' || n.doneBy) && 'done',
                 drag?.targetId === n.id && 'drop',
                 drag?.sub.has(n.id) && 'ghost',
               ].filter(Boolean).join(' ');
@@ -732,9 +735,13 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
             ) : (
               <button onClick={() => plantBranch(selectedId)} data-tip="이 가지를 새 마인드맵으로 심기: 하위 가지가 새 마인드맵으로 옮겨집니다"><Sprout size={19} /><span>심기</span></button>
             ))}
-            <button onClick={() => cycleStatus(selectedId)} className={selected.node.status ? `st ${selected.node.status}` : ''} data-tip="상태 바꾸기: 없음 → 할 일 → 진행 중 → 완료">
-              <StatusIcon status={selected.node.status} size={19} />
-              <span>{selected.node.status ? STATUS_LABEL[selected.node.status] : '상태'}</span>
+            <button
+              onClick={() => cycleStatus(selectedId)}
+              className={shown?.status ? `st ${shown.status}` : ''}
+              data-tip={shown?.doneBy ? '상위 가지가 완료라서 완료로 처리됩니다. 상위 가지의 완료를 풀면 이 가지의 원래 상태로 돌아갑니다' : '상태 바꾸기: 없음 → 할 일 → 진행 중 → 완료'}
+            >
+              <StatusIcon status={shown?.status} size={19} />
+              <span>{shown?.status ? STATUS_LABEL[shown.status] : shown?.doneBy ? '완료' : '상태'}</span>
             </button>
             <button onClick={() => { revealRef.current = selectedId; setSheet(sheet === 'detail' ? null : 'detail'); }} className={sheet === 'detail' ? 'on' : ''} data-tip="상세: 상태, 마감일, 메모, 가지 색, 순서"><SlidersHorizontal size={18} /><span>상세</span></button>
             {selected.parent && <button onClick={() => askRemove(selectedId)} className="danger" data-tip="삭제 (Delete): 하위 가지가 있으면 범위를 고릅니다"><Trash2 size={18} /><span>삭제</span></button>}
@@ -763,14 +770,14 @@ export default function Editor({ map, mapTitles, onChange, onCreateMap, onBack, 
           />
         )}
         {sheet === 'tasks' && (
-          <TasksSheet root={root} onCycle={cycleStatus} onFocus={focusNode} onClose={() => setSheet(null)} />
+          <TasksSheet root={shownRoot} onCycle={cycleStatus} onFocus={focusNode} onClose={() => setSheet(null)} />
         )}
 
         {sheet === 'send' && (
-          <CopySheet root={root} defaultKind={categoryOf(map) === 'app' ? 'app' : 'report'} branch={selected && selected.parent ? selected.node : null} onClose={() => setSheet(null)} />
+          <CopySheet root={shownRoot} defaultKind="report" branch={selected && selected.parent ? shown : null} onClose={() => setSheet(null)} />
         )}
         {sheet === 'calendar' && (
-          <CalendarSheet root={root} onFocus={focusNode} onClose={() => setSheet(null)} />
+          <CalendarSheet root={shownRoot} onFocus={focusNode} onClose={() => setSheet(null)} />
         )}
 
         {drag && (

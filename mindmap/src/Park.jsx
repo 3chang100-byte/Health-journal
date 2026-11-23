@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { X, ZoomIn, ZoomOut, ArrowRight } from 'lucide-react';
-import { CATEGORIES, CATEGORY_KEYS, categoryOf, josa, stats, titleOf } from './store.js';
+import { CATEGORIES, CATEGORY_KEYS, categoryOf, stats, titleOf } from './store.js';
 import { growth, plantGeo, progressOf } from './plant.js';
 
 const LEVELS = [
@@ -37,13 +37,13 @@ function PlantShapes({ geo, labels }) {
   );
 }
 
-// 정원을 가꾸는 사람: 구역을 오가며 물을 주거나, 갈퀴질하거나, 수레를 민다
+// 정원을 가꾸는 사람: 정원을 오가며 물을 주거나, 갈퀴질하거나, 수레를 민다
 const TINTS = ['#3b7dd8', '#d9534f', '#8e59c9', '#2f9e8f'];
 const JOBS = ['water', 'rake', 'water', 'barrow'];
 
-function Gardener({ index, y, scale }) {
+function Gardener({ index, y, scale, span }) {
   const job = JOBS[index % JOBS.length];
-  const style = { '--a': '26px', '--b': '334px', '--dur': `${20 + index * 4}s`, '--delay': `${-index * 7}s` };
+  const style = { '--a': '30px', '--b': `${span - 30}px`, '--dur': `${Math.max(16, span / 22) + index * 5}s`, '--delay': `${-index * 9}s` };
   return (
     <g transform={`translate(0 ${y})`} aria-hidden="true">
       <g className="g-walk" style={style}>
@@ -90,68 +90,87 @@ function Gardener({ index, y, scale }) {
   );
 }
 
-function Zone({ cat, index, maps, onPick, onNew }) {
-  const info = CATEGORIES[cat];
-  const done = maps.filter((m) => m.completedAt).length;
-  const shown = maps.slice(0, 10);
-  const perRow = shown.length > 5 ? Math.ceil(shown.length / 2) : shown.length;
+const ROW_H = 134; // 한 줄의 높이
+const SKY = 64; // 맨 위 하늘 높이
 
+/** 정원 전체가 하나의 넓은 땅: 화면 너비만큼 줄을 채우며 어떤 씨앗이든 한곳에 심는다 */
+function Garden({ maps, onPick }) {
+  const boxRef = useRef(null);
+  const [w, setW] = useState(360);
+  useLayoutEffect(() => {
+    const el = boxRef.current;
+    const measure = () => setW(Math.max(280, Math.round(el.clientWidth)));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const narrow = w < 520;
+  const cols = Math.max(2, Math.floor((w - 20) / (narrow ? 96 : 124)));
+  const rows = Math.max(Math.ceil(maps.length / cols), 2);
+  const H = SKY + rows * ROW_H + 26;
+  const slot = (w - 20) / cols;
+  const hands = Math.min(narrow ? 2 : 4, rows + 1);
+
+  // 뒤(위)에서 앞(아래)으로 그려야 겹침이 자연스럽다
+  const items = [];
+  maps.forEach((m, i) => {
+    const r = Math.floor(i / cols);
+    const c = i % cols;
+    const depth = rows > 1 ? 0.84 + 0.16 * (r / (rows - 1)) : 1;
+    const x = Math.min(w - 50, Math.max(50, 10 + (c + 0.5) * slot + (r % 2 ? 0.2 : -0.2) * slot * (cols > 2 ? 1 : 0)));
+    const y = SKY + (r + 1) * ROW_H - 30;
+    const geo = plantGeo(m);
+    const g = growth(m);
+    const pct = Math.round(progressOf(m) * 100);
+    const k = Math.min((104 * g * depth) / geo.bounds.h, ((slot - 16) * (0.45 + 0.55 * g)) / geo.bounds.w, 1.5);
+    const name = titleOf(m);
+    items.push({
+      y,
+      el: (
+        <g
+          key={m.id}
+          className="plant"
+          role="button"
+          tabIndex={0}
+          aria-label={`${name}, ${CATEGORIES[categoryOf(m)].plantName}, ${m.completedAt ? '완료' : `진행 ${pct}%`}, 마인드맵 열기`}
+          onClick={() => onPick(m.id)}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onPick(m.id))}
+        >
+          <rect x={x - slot / 2 + 4} y={y - 104} width={slot - 8} height="128" rx="8" fill="transparent" />
+          <g transform={`translate(${x} ${y}) scale(${k})`}><PlantShapes geo={geo} /></g>
+          <text x={x} y={y + 13} textAnchor="middle" className="plant-name">{name.slice(0, 7)}{name.length > 7 ? '…' : ''}</text>
+          <text x={x} y={y + 23} textAnchor="middle" className="plant-pct">{m.completedAt ? '완료' : `${pct}%`}</text>
+        </g>
+      ),
+    });
+  });
+  for (let i = 0; i < hands; i++) {
+    const y = SKY + 46 + (hands > 1 ? (i * (H - SKY - 70)) / (hands - 1) : 40);
+    items.push({ y: y - 1, el: <Gardener key={`g${i}`} index={i} y={y} scale={1.35 + 0.25 * (y / H)} span={w} /> });
+  }
+  items.sort((a, b) => a.y - b.y);
+
+  const hill = (top, amp) => `M0 ${H}V${top}C${w * 0.18} ${top - amp} ${w * 0.34} ${top - amp * 1.3} ${w * 0.5} ${top - amp * 0.4}C${w * 0.68} ${top + amp * 0.5} ${w * 0.84} ${top - amp} ${w} ${top - amp * 0.2}V${H}Z`;
   return (
-    <section className="zone">
-      <header>
-        <h2>{info.zone}</h2>
-        <span>{maps.length ? `${info.plantName} ${maps.length}그루 · 다 자람 ${done}` : '비어 있음'}</span>
-      </header>
-      <svg viewBox="0 58 360 142" role="group" aria-label={`${info.zone} 구역`}>
-        <path d="M0 200V168C60 150 120 146 180 150C240 154 300 150 360 160V200Z" fill="var(--ground)" />
-        <path d="M0 200V182C80 170 150 172 220 178C280 183 320 178 360 176V200Z" fill="var(--ground-2)" />
-        {!shown.length && (
-          <text x="180" y="106" textAnchor="middle" className="zone-empty">‘{info.label}’ 마인드맵을 시작하면 여기에 {josa(info.plantName, '을', '를')} 심어요</text>
-        )}
-        <Gardener index={index + 1} y={162} scale={1.25} />
-        <Gardener index={index} y={174} scale={1.6} />
-        {shown.map((m, i) => {
-          const back = shown.length > 5 && i >= perRow;
-          const col = back ? i - perRow : i;
-          const cols = back ? shown.length - perRow : perRow;
-          const x = cols === 1 ? 180 : 40 + (col * 280) / (cols - 1) + (back ? 14 : 0);
-          const y = back ? 160 : 176;
-          const geo = plantGeo(m);
-          const g = growth(m);
-          const pct = Math.round(progressOf(m) * 100);
-          const k = Math.min((back ? 84 : 104) * g / geo.bounds.h, (40 + 56 * g) / geo.bounds.w, 1.4);
-          return (
-            <g
-              key={m.id}
-              className="plant"
-              role="button"
-              tabIndex={0}
-              aria-label={`${titleOf(m)}, ${m.completedAt ? '완료' : `진행 ${pct}%`}, 마인드맵 열기`}
-              onClick={() => onPick(m.id)}
-              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onPick(m.id))}
-            >
-              <rect x={x - 34} y={y - 108} width="68" height="130" fill="transparent" />
-              <g transform={`translate(${x} ${y}) scale(${k})`} opacity={back ? 0.9 : 1}><PlantShapes geo={geo} /></g>
-              <text x={x} y={y + 12} textAnchor="middle" className="plant-name">{titleOf(m).slice(0, 7)}{titleOf(m).length > 7 ? '…' : ''}</text>
-              <text x={x} y={y + 21} textAnchor="middle" className="plant-pct">{m.completedAt ? '완료' : `${pct}%`}</text>
-            </g>
-          );
-        })}
+    <div className="garden" ref={boxRef}>
+      <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} role="group" aria-label="정원">
+        <path d={hill(SKY, 14)} fill="var(--ground)" />
+        <path d={hill(SKY + (H - SKY) * 0.55, 10)} fill="var(--ground-2)" />
+        {!maps.length && <text x={w / 2} y={SKY + 60} textAnchor="middle" className="zone-empty">‘새로 심기’로 첫 씨앗을 심어 보세요</text>}
+        {items.map((it) => it.el)}
       </svg>
-      {maps.length > shown.length && <p className="zone-more">외 {maps.length - shown.length}개 더 자라고 있어요</p>}
-    </section>
+    </div>
   );
 }
 
-export function Park({ maps, onPick, onNew }) {
-  const byCat = useMemo(() => {
-    const out = Object.fromEntries(CATEGORY_KEYS.map((k) => [k, []]));
-    [...maps].sort((a, b) => a.createdAt - b.createdAt).forEach((m) => out[categoryOf(m)].push(m));
-    return out;
-  }, [maps]);
+export function Park({ maps, onPick }) {
+  const sorted = useMemo(() => [...maps].sort((a, b) => a.createdAt - b.createdAt), [maps]);
   const done = maps.filter((m) => m.completedAt).length;
   const li = LEVELS.reduce((acc, l, i) => (done >= l.at ? i : acc), 0);
   const next = LEVELS[li + 1];
+  const kinds = CATEGORY_KEYS.map((k) => [CATEGORIES[k].plantName, maps.filter((m) => categoryOf(m) === k).length]).filter(([, n]) => n);
 
   return (
     <div className="park">
@@ -161,15 +180,13 @@ export function Park({ maps, onPick, onNew }) {
           <strong>{LEVELS[li].name}</strong>
         </div>
         <p>
-          심은 마인드맵 {maps.length}개 · 다 자란 것 {done}개
+          {kinds.length ? kinds.map(([name, n]) => `${name} ${n}`).join(' · ') : '아직 심은 것이 없어요'} · 다 자란 것 {done}개
           {next ? ` · ‘${next.name}’까지 ${next.at - done}개` : ' · 가장 높은 단계예요'}
         </p>
         {next && <span className="bar"><i style={{ width: `${((done - LEVELS[li].at) / (next.at - LEVELS[li].at)) * 100}%` }} /></span>}
       </div>
-      <div className="zones">
-        {CATEGORY_KEYS.map((k, i) => <Zone key={k} cat={k} index={i} maps={byCat[k]} onPick={onPick} onNew={onNew} />)}
-      </div>
-      <p className="foot">마인드맵을 시작하면 바로 정원에 심기고, 할 일을 끝낼수록 자랍니다. 식물을 누르면 그 마인드맵이 열려요.</p>
+      <Garden maps={sorted} onPick={onPick} />
+      <p className="foot">마인드맵을 시작하면 바로 정원에 심기고, 할 일을 끝낼수록 자랍니다. 나무·열매 나무·꽃·덤불을 한 정원에 섞어 심을 수 있어요. 식물을 누르면 그 마인드맵이 열립니다.</p>
     </div>
   );
 }
@@ -189,7 +206,7 @@ export function PlantView({ map, onOpen, openLabel = '마인드맵 열기', onTo
         <header>
           <div>
             <h2>{titleOf(map)}</h2>
-            <p>{info.zone} · {info.plantName} · {map.completedAt ? '완료' : '자라는 중'} · 가지 {s.nodes - 1}개{s.total ? ` · 할 일 ${s.done}/${s.total}` : ''}</p>
+            <p>{info.plantName} · {map.completedAt ? '완료' : '자라는 중'} · 가지 {s.nodes - 1}개{s.total ? ` · 할 일 ${s.done}/${s.total}` : ''}</p>
           </div>
           <button className="icon-btn" onClick={onClose} aria-label="닫기"><X size={19} /></button>
         </header>

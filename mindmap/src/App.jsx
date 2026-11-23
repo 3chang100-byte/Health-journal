@@ -110,7 +110,7 @@ export default function App() {
       const info = CATEGORIES[categoryOf(m)];
       setDialog({
         title: '프로젝트 완료',
-        message: `‘${titleOf(m)}’ 프로젝트가 정원의 ‘${info.zone}’ 구역에서 다 자란 ${josa(info.plantName, '이', '가')} 됐어요.`,
+        message: `‘${titleOf(m)}’ 프로젝트가 정원에서 다 자란 ${josa(info.plantName, '이', '가')} 됐어요.`,
         confirmLabel: '정원 보기',
         onConfirm: () => { location.hash = ''; },
       });
@@ -180,8 +180,8 @@ export default function App() {
         )}
         {picker && (
           <TemplatePicker
-            title="구역 바꾸기"
-            note="구역에 따라 정원에서 자라는 식물이 달라집니다. 마인드맵 내용은 그대로예요."
+            title="씨앗 바꾸기"
+            note="씨앗에 따라 정원에서 자라는 모습이 달라집니다. 마인드맵 내용은 그대로예요."
             onPick={(c) => patchMap(current.id, { category: c })}
             onClose={() => setPicker(null)}
           />
@@ -227,13 +227,13 @@ export default function App() {
         <button role="tab" aria-selected={tab === 'list'} className={tab === 'list' ? 'on' : ''} onClick={() => { location.hash = '#list'; }} data-tip="목록: 마인드맵을 카드로 보고 복제·삭제">목록 {maps.length}</button>
       </div>
 
-      {tab === 'garden' && <Park maps={maps} onPick={open} onNew={() => setPicker('new')} />}
+      {tab === 'garden' && <Park maps={maps} onPick={open} />}
       {syncOpen && <SyncDialog sync={sync} onClose={() => setSyncOpen(false)} />}
       {importing && <ImportDialog onCreate={createFromTree} onClose={() => setImporting(false)} />}
       {picker === 'new' && (
         <TemplatePicker
           title="새로 심기"
-          note="어느 구역에 심을지 고르면 빈 마인드맵으로 시작합니다. 구역은 나중에 바꿀 수 있어요."
+          note="어떤 씨앗을 심을지 고르면 빈 마인드맵으로 시작합니다. 씨앗은 나중에 바꿀 수 있어요."
           onPick={create}
           onClose={() => setPicker(null)}
         />
