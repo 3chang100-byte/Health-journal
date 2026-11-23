@@ -379,7 +379,7 @@ h1, h2, h3, p { margin: 0; }
 .dialog-wrap { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(10, 12, 16, 0.45); }
 .dialog { width: min(420px, 100%); padding: 20px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); display: grid; gap: 10px; }
 .dialog h2 { font-size: 17px; }
-.dialog p { color: var(--muted); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.dialog p { white-space: pre-line; color: var(--muted); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
 .dialog textarea { width: 100%; font: 12px/1.4 ui-monospace, monospace; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; resize: vertical; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 

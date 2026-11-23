@@ -12,8 +12,9 @@ export default defineConfig({
       manifest: {
         name: '생각의 정원',
         short_name: '생각의 정원',
-        description: '프로젝트를 가지로 펼치고 할 일까지 한 장에서 관리',
-        theme_color: '#3b5bdb',
+        description: '마인드맵으로 프로젝트를 진행하고, 해낸 만큼 자라는 정원',
+        id: './',
+        theme_color: '#2f7d46',
         background_color: '#f6f5f1',
         display: 'standalone',
         scope: './',
@@ -22,7 +23,7 @@ export default defineConfig({
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+          { src: 'pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       },
       workbox: { globPatterns: ['**/*.{js,css,html,svg,png,ico}'] }

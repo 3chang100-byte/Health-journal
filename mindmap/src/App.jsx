@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, MoreVertical, Upload, Download, CheckCircle2, Sprout, Mic, Cloud, CloudOff, AlertTriangle } from 'lucide-react';
+import { Plus, MoreVertical, Upload, Download, CheckCircle2, Sprout, Mic, Cloud, CloudOff, AlertTriangle, MonitorDown } from 'lucide-react';
 import Editor from './Editor.jsx';
 import { Dialog, Menu } from './Panels.jsx';
 import { Park, PlantView, TemplatePicker } from './Park.jsx';
@@ -23,6 +23,31 @@ export default function App() {
   const [plantId, setPlantId] = useState(null);
   const [importing, setImporting] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
+  // 앱으로 설치: 브라우저가 설치할 수 있다고 알려 주면 그 요청을 보관해 두었다가 버튼을 누를 때 띄운다
+  const [installEvent, setInstallEvent] = useState(null);
+  const [installed, setInstalled] = useState(() => window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true);
+  useEffect(() => {
+    const onPrompt = (e) => { e.preventDefault(); setInstallEvent(e); };
+    const onDone = () => { setInstalled(true); setInstallEvent(null); };
+    window.addEventListener('beforeinstallprompt', onPrompt);
+    window.addEventListener('appinstalled', onDone);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt);
+      window.removeEventListener('appinstalled', onDone);
+    };
+  }, []);
+  const install = async () => {
+    if (installEvent) {
+      installEvent.prompt();
+      await installEvent.userChoice.catch(() => null);
+      setInstallEvent(null);
+      return;
+    }
+    setDialog({
+      title: '앱으로 설치하기',
+      message: '컴퓨터(Chrome·Edge): 주소창 오른쪽의 설치 아이콘을 누르거나, 브라우저 메뉴(⋮)에서 ‘앱 설치’ 또는 ‘앱 → 이 사이트를 앱으로 설치’를 고르세요. 설치한 뒤 작업 표시줄의 아이콘을 마우스 오른쪽 버튼으로 눌러 ‘작업 표시줄에 고정’을 고르면 됩니다.\n\n아이폰(Safari): 공유 버튼 → ‘홈 화면에 추가’.\n안드로이드(Chrome): 메뉴(⋮) → ‘앱 설치’ 또는 ‘홈 화면에 추가’.',
+    });
+  };
   const [saveFailed, setSaveFailed] = useState(false);
   const [menuFor, setMenuFor] = useState(null);
   const [dialog, setDialog] = useState(null);
@@ -203,6 +228,11 @@ export default function App() {
         <div className="home-actions">
           <button className="solid-btn plant-new" onClick={() => setPicker('new')} data-tip="새 마인드맵을 만들어 정원에 심기"><Sprout size={17} /> 새로 심기</button>
           <button className="ghost-btn" onClick={() => setImporting(true)} data-tip="녹음 대본·요약으로 마인드맵 만들기"><Mic size={16} /> 녹음으로 심기</button>
+          {canSync && !installed && (
+            <button className="ghost-btn" onClick={install} data-tip="이 앱을 컴퓨터나 휴대폰에 설치: 설치하면 작업 표시줄에 고정할 수 있어요">
+              <MonitorDown size={16} /> 앱으로 설치
+            </button>
+          )}
           {canSync && (
             <button className={`ghost-btn sync-btn ${sync.status}`} onClick={() => setSyncOpen(true)} data-tip="여러 기기에서 같은 마인드맵 보기 (GitHub 계정에 저장)">
               {sync.status === 'off' ? <CloudOff size={16} /> : sync.status === 'error' ? <AlertTriangle size={16} /> : <Cloud size={16} />}
